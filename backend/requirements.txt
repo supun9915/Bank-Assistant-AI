@@ -1,0 +1,19 @@
+# Smart Banking Assistant - Backend Dependencies
+
+# FastAPI Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.10.0
+
+# Database
+mysql-connector-python==8.3.0
+
+# NLP
+nltk==3.8.1
+
+# Utilities
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Optional but recommended
+email-validator==2.1.0
