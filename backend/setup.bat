@@ -46,14 +46,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Download NLTK data
+REM Download spaCy model
 echo.
-echo [5/6] Downloading NLTK language data...
-python -c "import nltk; nltk.download('punkt_tab', quiet=False); nltk.download('stopwords', quiet=False); nltk.download('wordnet', quiet=False)"
+echo [5/6] Downloading spaCy language model...
+python -m spacy download en_core_web_sm
 
 if errorlevel 1 (
-    echo [WARNING] Failed to download NLTK data
-    echo NLTK data will be downloaded automatically on first run
+    echo [WARNING] Failed to download spaCy model
+    echo You may need to run manually: python -m spacy download en_core_web_sm
 )
 
 REM Create .env file if it doesn't exist

@@ -1,0 +1,103 @@
+{
+  "GREETING": {
+    "description": "User greeting or salutation",
+    "requires_db": false,
+    "examples": ["Hello", "Hi", "Hey", "Good morning", "Good evening"]
+  },
+
+  "BALANCE": {
+    "description": "Query about account balance",
+    "requires_db": true,
+    "examples": [
+      "What is my account balance?",
+      "How much money do I have?",
+      "Check my balance"
+    ]
+  },
+
+  "TRANSACTIONS": {
+    "description": "Query about transaction history",
+    "requires_db": true,
+    "examples": [
+      "Show my recent transactions",
+      "Transaction history",
+      "What did I spend money on?"
+    ]
+  },
+
+  "LOAN": {
+    "description": "Query about loans or credit",
+    "requires_db": false,
+    "examples": [
+      "I need a loan",
+      "What loan options do you have?",
+      "Loan interest rates"
+    ]
+  },
+
+  "ACCOUNT_SERVICES": {
+    "description": "Account management and services",
+    "requires_db": false,
+    "examples": [
+      "How to open a bank account?",
+      "How do I close my account?",
+      "How to update email address?"
+    ]
+  },
+
+  "SECURITY": {
+    "description": "Security, password, or card issues",
+    "requires_db": false,
+    "examples": [
+      "I forgot my password",
+      "My card is lost",
+      "How to block my card?"
+    ]
+  },
+
+  "TRANSFERS": {
+    "description": "Money transfer or payment actions",
+    "requires_db": false,
+    "examples": [
+      "How to transfer money?",
+      "Send money to another account",
+      "How to pay bills?"
+    ]
+  },
+
+  "FEES": {
+    "description": "Fees, charges, and account limits",
+    "requires_db": false,
+    "examples": [
+      "What are bank charges?",
+      "ATM withdrawal limit?",
+      "Minimum balance required?"
+    ]
+  },
+
+  "DIGITAL_BANKING": {
+    "description": "Mobile and internet banking services",
+    "requires_db": false,
+    "examples": [
+      "How to use mobile banking?",
+      "Internet banking login",
+      "How to download bank app?"
+    ]
+  },
+
+  "GENERAL": {
+    "description": "General bank information and support",
+    "requires_db": false,
+    "examples": [
+      "What are your working hours?",
+      "Where is nearest branch?",
+      "How to contact bank?"
+    ]
+  },
+
+  "UNKNOWN": {
+    "description": "Intent not recognized",
+    "requires_db": false,
+    "examples": []
+  }
+}

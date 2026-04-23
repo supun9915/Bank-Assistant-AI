@@ -1,54 +1,60 @@
 """
-Natural Language Processing module using NLTK
+Natural Language Processing module using spaCy
 Handles intent detection and text processing
 """
+import json
 import logging
-import nltk
+from pathlib import Path
 from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
-# Download required NLTK data on first use
-def _ensure_nltk_data():
-    resources = [
-        ('tokenizers/punkt_tab', 'punkt_tab'),
-        ('tokenizers/punkt', 'punkt'),
-        ('corpora/stopwords', 'stopwords'),
-        ('corpora/wordnet', 'wordnet'),
-    ]
-    for path, name in resources:
-        try:
-            nltk.data.find(path)
-        except (LookupError, OSError):
-            nltk.download(name, quiet=True)
 
-_ensure_nltk_data()
-
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-
-_lemmatizer = WordNetLemmatizer()
-_stop_words = set(stopwords.words('english'))
-
-logger.info("NLTK NLP components loaded successfully")
+def _load_spacy_model():
+    import spacy
+    try:
+        return spacy.load("en_core_web_sm")
+    except OSError:
+        logger.info("Downloading spaCy model en_core_web_sm...")
+        from spacy.cli import download
+        download("en_core_web_sm")
+        return spacy.load("en_core_web_sm")
 
 
-# Intent definitions with keywords
-INTENT_KEYWORDS = {
-    'GREETING': ['hello', 'hi', 'hey', 'greetings', 'good morning', 'good afternoon', 
-                 'good evening', 'howdy', 'hola', 'namaste'],
-    
-    'BALANCE': ['balance', 'money', 'account', 'amount', 'fund', 'cash', 
-                'saving', 'checking', 'total', 'available'],
-    
-    'TRANSACTIONS': ['transaction', 'history', 'statement', 'record', 'activity', 
-                     'purchase', 'payment', 'transfer', 'withdrawal', 'deposit', 
-                     'recent', 'last', 'previous'],
-    
-    'LOAN': ['loan', 'credit', 'borrow', 'mortgage', 'emi', 'installment', 
-             'lending', 'debt', 'financing', 'advance']
-}
+_nlp = _load_spacy_model()
+logger.info("spaCy NLP components loaded successfully")
+
+
+# ── JSON-driven intent data ─────────────────────────────────────────────────
+_INTENTS_DIR = Path(__file__).parent / 'intents'
+
+
+def _load_json(filename: str) -> dict:
+    """Load a JSON file from the intents directory."""
+    path = _INTENTS_DIR / filename
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logger.error(f"Intent file not found: {path}")
+        raise
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in {path}: {e}")
+        raise
+
+
+def reload_intents() -> None:
+    """Reload intent data from JSON files at runtime (call after editing JSONs)."""
+    global INTENT_KEYWORDS, _INTENT_INFO
+    INTENT_KEYWORDS = _load_json('intent_keywords.json')
+    _INTENT_INFO = _load_json('intent_info.json')
+    logger.info(f"Loaded {len(INTENT_KEYWORDS)} intents from JSON files")
+
+
+# Load on startup
+INTENT_KEYWORDS: dict = _load_json('intent_keywords.json')
+_INTENT_INFO: dict = _load_json('intent_info.json')
+logger.info(f"Loaded {len(INTENT_KEYWORDS)} intents from JSON files")
 
 
 def preprocess_text(text: str) -> str:
@@ -75,7 +81,7 @@ def preprocess_text(text: str) -> str:
 
 def extract_lemmas(text: str) -> list:
     """
-    Extract lemmatized tokens from text using NLTK
+    Extract lemmatized tokens from text using spaCy
     
     Args:
         text: Input text
@@ -83,11 +89,11 @@ def extract_lemmas(text: str) -> list:
     Returns:
         List of lemmatized tokens
     """
-    tokens = word_tokenize(text)
+    doc = _nlp(text)
     lemmas = [
-        _lemmatizer.lemmatize(token.lower())
-        for token in tokens
-        if token.isalpha() and token.lower() not in _stop_words
+        token.lemma_.lower()
+        for token in doc
+        if token.is_alpha and not token.is_stop
     ]
     return lemmas
 
@@ -158,7 +164,7 @@ def detect_intent(user_input: str) -> Tuple[str, float]:
 
 def extract_entities(text: str) -> dict:
     """
-    Extract simple entities from text using regex patterns
+    Extract entities from text using spaCy NER
     
     Args:
         text: Input text
@@ -169,50 +175,31 @@ def extract_entities(text: str) -> dict:
     import re
     entities = {}
 
-    # Extract numbers (e.g., amounts)
-    numbers = re.findall(r'\b\d+(?:\.\d+)?\b', text)
-    if numbers:
-        entities['CARDINAL'] = numbers
+    # Use spaCy named entity recognition
+    doc = _nlp(text)
+    for ent in doc.ents:
+        if ent.label_ not in entities:
+            entities[ent.label_] = []
+        entities[ent.label_].append(ent.text)
 
-    # Extract currency-like values
-    currency = re.findall(r'\$\s?\d+(?:,\d{3})*(?:\.\d+)?', text)
-    if currency:
-        entities['MONEY'] = currency
+    # Regex fallback for numbers not caught by NER
+    if 'CARDINAL' not in entities:
+        numbers = re.findall(r'\b\d+(?:\.\d+)?\b', text)
+        if numbers:
+            entities['CARDINAL'] = numbers
+
+    # Regex fallback for currency values
+    if 'MONEY' not in entities:
+        currency = re.findall(r'\$\s?\d+(?:,\d{3})*(?:\.\d+)?', text)
+        if currency:
+            entities['MONEY'] = currency
 
     return entities
 
 
 def get_intent_info(intent: str) -> dict:
     """
-    Get metadata about an intent
-    
-    Args:
-        intent: Intent name
-        
-    Returns:
-        Dictionary with intent information
+    Get metadata about an intent.
+    Data is loaded from intents/intent_info.json — edit that file to add details.
     """
-    intent_info = {
-        'GREETING': {
-            'description': 'User greeting or salutation',
-            'requires_db': False
-        },
-        'BALANCE': {
-            'description': 'Query about account balance',
-            'requires_db': True
-        },
-        'TRANSACTIONS': {
-            'description': 'Query about transaction history',
-            'requires_db': True
-        },
-        'LOAN': {
-            'description': 'Query about loans or credit',
-            'requires_db': False
-        },
-        'UNKNOWN': {
-            'description': 'Intent not recognized',
-            'requires_db': False
-        }
-    }
-    
-    return intent_info.get(intent, intent_info['UNKNOWN'])
+    return _INTENT_INFO.get(intent, _INTENT_INFO.get('UNKNOWN', {}))

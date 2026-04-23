@@ -9,7 +9,7 @@ pydantic>=2.10.0
 mysql-connector-python==8.3.0
 
 # NLP
-nltk==3.8.1
+spacy>=3.7.0
 
 # Utilities
 python-dotenv==1.0.0

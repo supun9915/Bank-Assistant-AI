@@ -7,7 +7,7 @@ backend/
 │
 ├── 📄 main.py                          # FastAPI application entry point
 ├── 📄 db.py                            # Database connection and queries
-├── 📄 nlp.py                           # NLP processing with NLTK
+├── 📄 nlp.py                           # NLP processing with spaCy
 │
 ├── 📂 models/                          # Pydantic data models
 │   ├── __init__.py
@@ -59,7 +59,7 @@ The **Smart Banking Assistant** is an AI-powered conversational chatbot backend 
 
 ### 🧠 NLP Capabilities
 
-- Tokenizes and lemmatizes user input using NLTK
+- Tokenizes and lemmatizes user input using spaCy
 - Removes English stop words to focus on meaningful terms
 - Scores each intent via weighted keyword matching (exact phrase vs. lemma match)
 - Returns the best-matching intent with a confidence score (0.0 – 1.0)
@@ -105,12 +105,10 @@ The **Smart Banking Assistant** is an AI-powered conversational chatbot backend 
 
 ### Natural Language Processing
 
-| Technology                          | Version | Why Used                                                                                                                                                 |
-| ----------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **NLTK** (Natural Language Toolkit) | 3.8.1   | Lightweight NLP library for tokenization, stop-word removal, and lemmatization; no GPU required; easy to install and use in academic/coursework settings |
-| **NLTK: punkt / punkt_tab**         | bundled | Sentence and word tokenizer models required by `word_tokenize()`                                                                                         |
-| **NLTK: stopwords**                 | bundled | English stop-word corpus to filter noise words (the, is, a, etc.) before intent scoring                                                                  |
-| **NLTK: wordnet**                   | bundled | Lexical database used by `WordNetLemmatizer` to reduce words to their base form (e.g., "transactions" → "transaction")                                   |
+| Technology                | Version | Why Used                                                                                                                                                                                  |
+| ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **spaCy**                 | ≥ 3.7.0 | Industrial-strength NLP library; built-in tokenizer, lemmatizer, stop-word lists, and named entity recognition; no manual corpus downloads required; reliable cross-platform installation |
+| **spaCy: en_core_web_sm** | 3.8.x   | Small English pipeline model providing tokenization, POS tagging, dependency parsing, and NER used by `nlp.py`                                                                            |
 
 ### Database
 
