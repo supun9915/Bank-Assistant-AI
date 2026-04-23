@@ -1,4 +1,4 @@
-# Smart Banking Assistant - Project Structure
+# Smart Banking Assistant - Project Structure & Technology Reference
 
 ## 📁 Complete Directory Structure
 
@@ -7,7 +7,7 @@ backend/
 │
 ├── 📄 main.py                          # FastAPI application entry point
 ├── 📄 db.py                            # Database connection and queries
-├── 📄 nlp.py                           # NLP processing with spaCy
+├── 📄 nlp.py                           # NLP processing with NLTK
 │
 ├── 📂 models/                          # Pydantic data models
 │   ├── __init__.py
@@ -37,6 +37,189 @@ backend/
 ├── 📄 setup.sh                         # Linux/Mac setup script
 └── 📄 Smart_Banking_Assistant.postman_collection.json
 ```
+
+---
+
+## 🚀 What This Project Can Do
+
+The **Smart Banking Assistant** is an AI-powered conversational chatbot backend that allows bank customers to interact with their banking data via natural language. Here is a full list of capabilities:
+
+### 💬 Conversational Capabilities
+
+| Feature                       | Description                                                                                        |
+| ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Greeting & Onboarding**     | Recognizes common greetings (Hello, Hi, Hey, Good morning, Namaste, etc.) and responds warmly      |
+| **Account Balance Inquiry**   | Fetches and returns the real-time account balance for a user from the database                     |
+| **Transaction History**       | Retrieves and formats the last N (default: 5) transactions with date, amount, type and description |
+| **Loan & Credit Information** | Provides informational answers about loan products, EMI, mortgage, and financing options           |
+| **General Banking Q&A**       | Searches a structured knowledge base to answer common banking questions                            |
+| **Unknown Query Handling**    | When a question cannot be answered, it is saved to the database for future improvement             |
+| **Self-Learning**             | Unknown questions are stored with deduplication, building a dataset for future model training      |
+| **Multi-user Support**        | Each request can carry a `user_id`, enabling per-user data retrieval                               |
+
+### 🧠 NLP Capabilities
+
+- Tokenizes and lemmatizes user input using NLTK
+- Removes English stop words to focus on meaningful terms
+- Scores each intent via weighted keyword matching (exact phrase vs. lemma match)
+- Returns the best-matching intent with a confidence score (0.0 – 1.0)
+- Extracts numeric entities and currency values via regex patterns
+- Handles edge cases: empty input, no-match scenarios, ambiguous messages
+
+### 🌐 API Capabilities
+
+- RESTful HTTP API built on FastAPI
+- Interactive auto-generated documentation at `/docs` (Swagger UI) and `/redoc`
+- Health check endpoints (`/` and `/health`) for monitoring
+- CORS-enabled for browser-based frontends
+- Structured JSON responses with `reply`, `intent`, `confidence`, and optional `data` fields
+
+---
+
+## 🛠️ Technologies Used & Why
+
+### Programming Language
+
+| Technology | Version | Why Used                                                                                                                                             |
+| ---------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Python** | 3.10+   | Industry-standard for AI/NLP projects; rich ecosystem of ML, web, and database libraries; clean syntax suitable for rapid prototyping and coursework |
+
+### Runtime & Server
+
+| Technology              | Version  | Why Used                                                                                                                              |
+| ----------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **CPython (Python VM)** | 3.10+    | Reference Python interpreter; standard for production Python applications                                                             |
+| **Uvicorn**             | ≥ 0.30.0 | Lightning-fast ASGI server required to run FastAPI; supports async I/O, WebSockets, and HTTP/2; ideal for real-time chatbot workloads |
+
+### Web Framework
+
+| Technology  | Version   | Why Used                                                                                                                                                                                             |
+| ----------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **FastAPI** | ≥ 0.115.0 | Modern, high-performance Python web framework; auto-generates OpenAPI/Swagger docs; native async support; built-in Pydantic validation; significantly faster than Flask/Django for API-only backends |
+
+### Data Validation
+
+| Technology   | Version  | Why Used                                                                                                                                                              |
+| ------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Pydantic** | ≥ 2.10.0 | Enforces data types and constraints on API request/response models at runtime; integrated directly into FastAPI; prevents malformed data from reaching business logic |
+
+### Natural Language Processing
+
+| Technology                          | Version | Why Used                                                                                                                                                 |
+| ----------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **NLTK** (Natural Language Toolkit) | 3.8.1   | Lightweight NLP library for tokenization, stop-word removal, and lemmatization; no GPU required; easy to install and use in academic/coursework settings |
+| **NLTK: punkt / punkt_tab**         | bundled | Sentence and word tokenizer models required by `word_tokenize()`                                                                                         |
+| **NLTK: stopwords**                 | bundled | English stop-word corpus to filter noise words (the, is, a, etc.) before intent scoring                                                                  |
+| **NLTK: wordnet**                   | bundled | Lexical database used by `WordNetLemmatizer` to reduce words to their base form (e.g., "transactions" → "transaction")                                   |
+
+### Database
+
+| Technology                 | Version | Why Used                                                                                                                                                        |
+| -------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **MySQL**                  | 8.x     | Reliable, widely-used relational database; strong support for financial/transactional data; ACID compliance ensures data integrity; familiar to most developers |
+| **mysql-connector-python** | 8.3.0   | Official Oracle-maintained MySQL driver for Python; supports parameterized queries (SQL injection prevention); context-manager-compatible connection handling   |
+
+### Utilities
+
+| Technology           | Version | Why Used                                                                                                                                   |
+| -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **python-dotenv**    | 1.0.0   | Loads environment variables from a `.env` file; keeps database credentials and secrets out of source code; standard 12-factor app practice |
+| **python-multipart** | ≥ 0.0.6 | Required by FastAPI to support `multipart/form-data` request bodies (file uploads, form submissions)                                       |
+| **email-validator**  | 2.1.0   | Validates email address format in Pydantic models; prevents invalid emails from being stored in the database                               |
+
+### Development & Testing Tools
+
+| Technology                  | Why Used                                                                                                                      |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Postman**                 | API testing and collection management; pre-configured collection included (`Smart_Banking_Assistant.postman_collection.json`) |
+| **Python `logging` module** | Built-in structured logging throughout all layers; aids debugging without external dependencies                               |
+| **Python `contextlib`**     | Powers the `@contextmanager` database connection pattern; ensures connections are always closed even on exceptions            |
+| **Python `re` (regex)**     | Used in `extract_entities()` to find currency amounts and numeric values in user input                                        |
+| **Python `typing`**         | Type hints across all modules for code clarity and IDE auto-complete support                                                  |
+
+---
+
+## ⚙️ Runtime & VM Details
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Host Machine                          │
+│                                                         │
+│  OS: Windows / Linux / macOS                            │
+│                                                         │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │           Python Virtual Environment              │  │
+│  │           (venv / .venv)                          │  │
+│  │                                                   │  │
+│  │  Runtime: CPython 3.10+                           │  │
+│  │  VM: Python bytecode interpreter (CPython VM)     │  │
+│  │                                                   │  │
+│  │  ┌─────────────────────────────────────────────┐  │  │
+│  │  │   Uvicorn ASGI Server                       │  │  │
+│  │  │   (uvicorn main:app --reload)               │  │  │
+│  │  │   Default Port: 8000                        │  │  │
+│  │  │                                             │  │  │
+│  │  │   ┌───────────────────────────────────┐     │  │  │
+│  │  │   │  FastAPI Application (main.py)    │     │  │  │
+│  │  │   │  + CORS Middleware                │     │  │  │
+│  │  │   │  + Routes (/api/chat)             │     │  │  │
+│  │  │   │  + Services (chat_service.py)     │     │  │  │
+│  │  │   │  + NLP Engine (nlp.py / NLTK)     │     │  │  │
+│  │  │   │  + DB Layer (db.py)               │     │  │  │
+│  │  │   └───────────────────────────────────┘     │  │  │
+│  │  └─────────────────────────────────────────────┘  │  │
+│  └───────────────────────────────────────────────────┘  │
+│                                                         │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │           MySQL Server 8.x                        │  │
+│  │           Port: 3306                              │  │
+│  │           Database: banking_chatbot               │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Environment Variables (`.env`)
+
+| Variable      | Default           | Description           |
+| ------------- | ----------------- | --------------------- |
+| `DB_HOST`     | `localhost`       | MySQL server hostname |
+| `DB_USER`     | `root`            | MySQL username        |
+| `DB_PASSWORD` | `mysql`           | MySQL password        |
+| `DB_NAME`     | `banking_chatbot` | Database name         |
+| `DB_PORT`     | `3306`            | MySQL port            |
+
+---
+
+## 📦 Complete Package Reference (`requirements.txt`)
+
+```
+# Web Framework & Server
+fastapi>=0.115.0          # REST API framework
+uvicorn[standard]>=0.30.0 # ASGI server (includes websockets, httptools)
+pydantic>=2.10.0          # Data validation and serialization
+
+# Database
+mysql-connector-python==8.3.0  # MySQL driver
+
+# NLP
+nltk==3.8.1               # Natural Language Toolkit
+
+# Utilities
+python-dotenv==1.0.0      # .env file loader
+python-multipart==0.0.6   # Form data / file upload support
+
+# Optional (recommended)
+email-validator==2.1.0    # Email validation in Pydantic models
+```
+
+### NLTK Data Downloads (auto-downloaded at startup)
+
+| Resource    | Path                   | Purpose                          |
+| ----------- | ---------------------- | -------------------------------- |
+| `punkt_tab` | `tokenizers/punkt_tab` | Word tokenizer (newer format)    |
+| `punkt`     | `tokenizers/punkt`     | Word tokenizer (legacy fallback) |
+| `stopwords` | `corpora/stopwords`    | English stop-word list           |
+| `wordnet`   | `corpora/wordnet`      | Lemmatization lexical database   |
 
 ---
 
@@ -89,26 +272,29 @@ backend/
 
 #### `nlp.py`
 
-- Natural Language Processing with spaCy
-- Intent detection engine
-- Text preprocessing
-- Lemmatization and tokenization
+- Natural Language Processing with **NLTK** (Natural Language Toolkit)
+- Intent detection via weighted keyword + lemma scoring
+- Text preprocessing and normalization
+- Lemmatization using `WordNetLemmatizer`
+- Tokenization using `word_tokenize`
+- Stop-word filtering using NLTK English corpus
+- Regex-based entity extraction
 
 **Key Functions:**
 
-- `preprocess_text()` - Clean and normalize text
-- `extract_lemmas()` - Extract lemmatized tokens
-- `detect_intent()` - Detect user intent
-- `extract_entities()` - Extract named entities
-- `get_intent_info()` - Get intent metadata
+- `preprocess_text()` - Lowercase, strip, normalize whitespace
+- `extract_lemmas()` - Tokenize, remove stop-words, lemmatize
+- `detect_intent()` - Score all intents, return best match + confidence
+- `extract_entities()` - Extract numbers and currency values via regex
+- `get_intent_info()` - Get intent metadata (description, DB requirement)
 
 **Supported Intents:**
 
 - `GREETING` - Greetings and salutations
 - `BALANCE` - Account balance queries
-- `TRANSACTIONS` - Transaction history
-- `LOAN` - Loan inquiries
-- `UNKNOWN` - Fallback intent
+- `TRANSACTIONS` - Transaction history and statements
+- `LOAN` - Loan, credit, mortgage, EMI inquiries
+- `UNKNOWN` - Fallback when no intent matches
 
 ---
 
@@ -363,7 +549,11 @@ services/chat_service.py
 └── typing
 
 nlp.py
-├── spacy
+├── nltk
+│   ├── nltk.tokenize (word_tokenize)
+│   ├── nltk.corpus (stopwords)
+│   └── nltk.stem (WordNetLemmatizer)
+├── re (regex)
 ├── logging
 └── typing
 
@@ -384,20 +574,23 @@ models/chat_models.py
 
 ```
 FastAPI Framework
-├── fastapi==0.109.0
-├── uvicorn[standard]==0.27.0
-└── pydantic==2.5.3
+├── fastapi>=0.115.0
+├── uvicorn[standard]>=0.30.0
+└── pydantic>=2.10.0
 
 Database
 └── mysql-connector-python==8.3.0
 
 NLP
-└── spacy==3.7.2
-    └── en_core_web_sm (model)
+└── nltk==3.8.1
+    ├── punkt / punkt_tab  (tokenizer data)
+    ├── stopwords          (stop-word corpus)
+    └── wordnet            (lemmatization lexicon)
 
 Utilities
 ├── python-dotenv==1.0.0
-└── python-multipart==0.0.6
+├── python-multipart==0.0.6
+└── email-validator==2.1.0
 ```
 
 ---
@@ -502,7 +695,7 @@ Automated setup script
 
 - Creates virtual environment
 - Installs dependencies
-- Downloads spaCy model
+- Downloads NLTK data (punkt, stopwords, wordnet)
 - Creates .env file
 
 ### `setup.sh` (Linux/Mac)
@@ -621,10 +814,10 @@ Database (MySQL)
 - Official Docs: https://fastapi.tiangolo.com/
 - Tutorial: https://fastapi.tiangolo.com/tutorial/
 
-### spaCy
+### NLTK
 
-- Official Docs: https://spacy.io/
-- 101 Guide: https://spacy.io/usage/spacy-101
+- Official Docs: https://www.nltk.org/
+- Book / Guide: https://www.nltk.org/book/
 
 ### MySQL
 
@@ -703,7 +896,7 @@ Lines of Code (approx):
 ## 🎯 Project Goals Achieved
 
 ✅ FastAPI backend
-✅ spaCy NLP integration
+✅ NLTK NLP integration
 ✅ MySQL database
 ✅ Intent detection
 ✅ Multiple intents (5+)

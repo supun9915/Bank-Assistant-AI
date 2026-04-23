@@ -89,6 +89,9 @@ DB_PASSWORD=your_mysql_password
 python -m uvicorn main:app --reload
 ```
 
+.\venv\Scripts\activate
+uvicorn main:app --reload
+
 Server will start at: http://localhost:8000
 
 ---
