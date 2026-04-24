@@ -56,17 +56,22 @@ CREATE TABLE IF NOT EXISTS transactions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
--- Table: knowledge
--- Knowledge base for predefined Q&A
+-- Table: chat_logs
+-- Stores all chat requests and responses for developer review
 -- =====================================================
-CREATE TABLE IF NOT EXISTS knowledge (
+CREATE TABLE IF NOT EXISTS chat_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    question VARCHAR(500) NOT NULL,
-    answer TEXT NOT NULL,
-    category VARCHAR(50),
+    user_id INT,
+    request_message TEXT NOT NULL,
+    response TEXT NOT NULL,
+    intent VARCHAR(50),
+    confidence DECIMAL(5, 4),
+    reviewed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_question (question(100))
+    INDEX idx_user_id (user_id),
+    INDEX idx_intent (intent),
+    INDEX idx_reviewed (reviewed),
+    INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
@@ -111,16 +116,7 @@ INSERT INTO transactions (account_id, amount, type, description, reference_numbe
 (1, 50.00, 'debit', 'Netflix Subscription', 'TXN006', '2026-04-15 12:00:00', 4175.50),
 (1, 300.00, 'credit', 'Refund from Amazon', 'TXN007', '2026-04-14 16:30:00', 4225.50);
 
--- Insert sample knowledge base entries
-INSERT INTO knowledge (question, answer, category) VALUES
-('What are your business hours?', 'Our bank is open Monday to Friday from 9:00 AM to 5:00 PM, and Saturday from 9:00 AM to 1:00 PM. We are closed on Sundays and public holidays.', 'general'),
-('How do I reset my password?', 'To reset your password, click on "Forgot Password" on the login page, enter your registered email, and follow the instructions sent to your email.', 'account'),
-('What is the minimum balance required?', 'The minimum balance requirement is $100 for savings accounts and $50 for checking accounts.', 'account'),
-('How can I contact customer support?', 'You can reach our customer support at 1-800-BANKING (1-800-226-5464) or email us at support@smartbanking.com. Our support team is available 24/7.', 'support'),
-('What are the ATM withdrawal limits?', 'The daily ATM withdrawal limit is $500 for standard accounts and $1,000 for premium accounts.', 'atm'),
-('How do I apply for a credit card?', 'You can apply for a credit card through our mobile app or by visiting any branch. You will need to provide identification and proof of income.', 'cards'),
-('What interest rates do you offer?', 'We offer competitive interest rates: 3.5% APY for savings accounts, 0.5% APY for checking accounts, and varying rates for fixed deposits based on tenure.', 'interest'),
-('How do I transfer money?', 'You can transfer money through our mobile app, online banking, or by visiting a branch. Instant transfers are available within the same bank.', 'transfer');
+-- chat_logs table starts empty — rows are inserted automatically at runtime
 
 -- =====================================================
 -- VERIFICATION QUERIES
@@ -133,7 +129,9 @@ SELECT 'Accounts created:', COUNT(*) FROM accounts
 UNION ALL
 SELECT 'Transactions created:', COUNT(*) FROM transactions
 UNION ALL
-SELECT 'Knowledge entries:', COUNT(*) FROM knowledge;
+SELECT 'Chat logs:', COUNT(*) FROM chat_logs
+UNION ALL
+SELECT 'Unknown questions:', COUNT(*) FROM unknown_questions;
 
 -- Display sample data
 SELECT '=== Sample User Account ===' as Info;

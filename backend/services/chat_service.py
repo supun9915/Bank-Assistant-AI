@@ -8,9 +8,8 @@ from nlp import detect_intent
 from db import (
     get_account_balance,
     get_recent_transactions,
-    get_answer_from_knowledge,
-    search_knowledge_base,
-    save_unknown_question
+    save_unknown_question,
+    save_chat_log
 )
 
 logger = logging.getLogger(__name__)
@@ -590,32 +589,8 @@ def handle_general_intent(message: str = "") -> Dict[str, Any]:
 
 def handle_unknown_intent(user_message: str) -> Dict[str, Any]:
     """
-    Handle UNKNOWN intent
-    Check knowledge base and save question if not found
+    Handle UNKNOWN intent — save question and return help message.
     """
-    # First, check if exact answer exists in knowledge base
-    answer = get_answer_from_knowledge(user_message)
-
-    if answer:
-        logger.info(f"Found answer in knowledge base for: {user_message}")
-        return {
-            "reply": answer,
-            "intent": "KNOWLEDGE",
-            "confidence": 0.8
-        }
-
-    # Try keyword-based search
-    answer = search_knowledge_base(user_message)
-
-    if answer:
-        logger.info(f"Found related answer in knowledge base for: {user_message}")
-        return {
-            "reply": answer,
-            "intent": "KNOWLEDGE",
-            "confidence": 0.7
-        }
-
-    # Save unknown question for learning
     save_unknown_question(user_message)
     logger.info(f"Saved unknown question: {user_message}")
 
@@ -699,6 +674,15 @@ def process_chat_message(message: str, user_id: int = 1, last_intent: str = None
         # Add confidence to response if not already present
         if 'confidence' not in response:
             response['confidence'] = confidence
+
+        # Log every request and response for developer review
+        save_chat_log(
+            user_id=user_id,
+            request_message=message,
+            response=response.get('reply', ''),
+            intent=response.get('intent', intent),
+            confidence=response.get('confidence', confidence)
+        )
 
         logger.info(f"Generated response for intent {intent}")
         return response

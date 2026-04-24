@@ -121,35 +121,26 @@ def get_recent_transactions(user_id: int = 1, limit: int = 5) -> List[Dict[str, 
     return result if result else []
 
 
-# ============= Knowledge Base Queries =============
+# ============= Chat Log Queries =============
 
-def get_answer_from_knowledge(question: str) -> Optional[str]:
+def save_chat_log(user_id: int, request_message: str, response: str, intent: str, confidence: float) -> bool:
     """
-    Search for answer in knowledge base
-    Uses case-insensitive matching
+    Save every chat request and its response to the chat_logs table.
+    Developers can review rows where reviewed = FALSE.
     """
-    query = """
-        SELECT answer 
-        FROM knowledge 
-        WHERE LOWER(question) = LOWER(%s)
-        LIMIT 1
-    """
-    result = execute_query(query, (question.strip(),), fetch_one=True)
-    return result['answer'] if result else None
-
-
-def search_knowledge_base(keywords: str) -> Optional[str]:
-    """
-    Search knowledge base using keyword matching
-    """
-    query = """
-        SELECT answer 
-        FROM knowledge 
-        WHERE LOWER(question) LIKE LOWER(%s)
-        LIMIT 1
-    """
-    result = execute_query(query, (f"%{keywords}%",), fetch_one=True)
-    return result['answer'] if result else None
+    try:
+        query = """
+            INSERT INTO chat_logs (user_id, request_message, response, intent, confidence)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        result = execute_query(query, (user_id, request_message.strip(), response.strip(), intent, round(confidence, 4)))
+        if result:
+            logger.info(f"Saved chat log for user {user_id}, intent={intent}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Error saving chat log: {e}")
+        return False
 
 
 # ============= Learning Feature Queries =============
