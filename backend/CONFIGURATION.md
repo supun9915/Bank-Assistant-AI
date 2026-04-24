@@ -8,7 +8,7 @@
 | ------------- | --------------------- | ----------------- | -------------------------- |
 | `DB_HOST`     | MySQL server hostname | `localhost`       | `localhost` or `127.0.0.1` |
 | `DB_USER`     | MySQL username        | `root`            | `root` or `banking_user`   |
-| `DB_PASSWORD` | MySQL password        | `""`              | `your_secure_password`     |
+| `DB_PASSWORD` | MySQL password        | `mysql`           | `your_secure_password`     |
 | `DB_NAME`     | Database name         | `banking_chatbot` | `banking_chatbot`          |
 | `DB_PORT`     | MySQL port            | `3306`            | `3306`                     |
 
@@ -96,33 +96,73 @@ app.add_middleware(
 )
 ```
 
-## NLP Configuration
+## NLP / AI Configuration
 
-### spaCy Model
+### Intent Detection — ANN Model
 
-- Model: `en_core_web_sm`
-- Language: English
-- Size: ~12 MB
+Intent classification is now performed by a **TensorFlow/Keras Artificial Neural
+Network** instead of spaCy + keyword matching.
 
-To use different model:
+#### Architecture
 
-```python
-# In nlp.py
-nlp = spacy.load("en_core_web_md")  # Medium model
-# or
-nlp = spacy.load("en_core_web_lg")  # Large model
+| Layer  | Units       | Activation | Extras                                      |
+| ------ | ----------- | ---------- | ------------------------------------------- |
+| Input  | vocab size  | —          | Bag-of-Words encoding                       |
+| Dense  | 256         | ReLU       | L2 regularisation + BatchNorm + Dropout 0.5 |
+| Dense  | 128         | ReLU       | L2 regularisation + BatchNorm + Dropout 0.4 |
+| Dense  | 64          | ReLU       | Dropout 0.2                                 |
+| Output | num_classes | Softmax    | —                                           |
+
+- **Optimiser**: Adam with Cosine Decay Restart schedule
+- **Loss**: Categorical cross-entropy
+- **Text encoding**: Lancaster stemming → binary bag-of-words vector
+
+#### Training the Model
+
+Run once before starting the server:
+
+```bash
+python train_model.py
 ```
 
-### Intent Detection
+Artefacts are saved to `models/`:
 
-Modify intents in [nlp.py](nlp.py):
+| File                  | Description             |
+| --------------------- | ----------------------- |
+| `chatbot_model.keras` | Trained Keras model     |
+| `words.pkl`           | Stemmed vocabulary list |
+| `classes.pkl`         | Intent label list       |
 
-```python
-INTENT_KEYWORDS = {
-    'YOUR_INTENT': ['keyword1', 'keyword2', 'keyword3'],
-    # Add more intents...
+> **Note**: If `models/chatbot_model.keras` is not present the API
+> automatically falls back to keyword matching so it remains fully functional.
+
+#### Adding / Modifying Training Data
+
+Edit [`intents/training_data.json`](intents/training_data.json) — each intent
+has a `tag` and a list of `patterns`:
+
+```json
+{
+  "intents": [
+    {
+      "tag": "MY_INTENT",
+      "patterns": [
+        "example sentence one",
+        "another example",
+        "yet another pattern"
+      ]
+    }
+  ]
 }
 ```
+
+Re-run `python train_model.py` after any changes.
+
+#### Keyword fallback
+
+The original keyword lists in
+[`intents/intent_keywords.json`](intents/intent_keywords.json) are still loaded
+and used as a fallback if the ANN model is unavailable.
 
 ## Database Schema
 

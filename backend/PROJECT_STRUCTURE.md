@@ -7,11 +7,20 @@ backend/
 │
 ├── 📄 main.py                          # FastAPI application entry point
 ├── 📄 db.py                            # Database connection and queries
-├── 📄 nlp.py                           # NLP processing with spaCy
+├── 📄 nlp.py                           # NLP processing with NLTK
+├── 📄 train_model.py                   # ANN training script (run once before server)
 │
-├── 📂 models/                          # Pydantic data models
+├── 📂 intents/                         # Intent definitions and training data
+│   ├── intent_info.json                # Intent metadata
+│   ├── intent_keywords.json            # Keyword fallback lists
+│   └── training_data.json             # ANN training patterns
+│
+├── 📂 models/                          # Pydantic models + trained ANN artefacts
 │   ├── __init__.py
-│   └── chat_models.py                  # Request/Response models
+│   ├── chat_models.py                  # Request/Response models
+│   ├── chatbot_model.keras             # Trained Keras model (generated)
+│   ├── words.pkl                       # Stemmed vocabulary (generated)
+│   └── classes.pkl                     # Intent labels (generated)
 │
 ├── 📂 routes/                          # API endpoints
 │   ├── __init__.py
@@ -59,7 +68,7 @@ The **Smart Banking Assistant** is an AI-powered conversational chatbot backend 
 
 ### 🧠 NLP Capabilities
 
-- Tokenizes and lemmatizes user input using spaCy
+- Tokenizes and stems user input using NLTK (`LancasterStemmer`) and builds a bag-of-words vector
 - Removes English stop words to focus on meaningful terms
 - Scores each intent via weighted keyword matching (exact phrase vs. lemma match)
 - Returns the best-matching intent with a confidence score (0.0 – 1.0)
@@ -105,10 +114,12 @@ The **Smart Banking Assistant** is an AI-powered conversational chatbot backend 
 
 ### Natural Language Processing
 
-| Technology                | Version | Why Used                                                                                                                                                                                  |
-| ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **spaCy**                 | ≥ 3.7.0 | Industrial-strength NLP library; built-in tokenizer, lemmatizer, stop-word lists, and named entity recognition; no manual corpus downloads required; reliable cross-platform installation |
-| **spaCy: en_core_web_sm** | 3.8.x   | Small English pipeline model providing tokenization, POS tagging, dependency parsing, and NER used by `nlp.py`                                                                            |
+| Technology             | Version  | Why Used                                                                                                                                                                      |
+| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **NLTK**               | ≥ 3.8.1  | Tokenization, Lancaster stemming, stop-word filtering, and lemmatization used in `nlp.py` and `train_model.py`                                                                |
+| **TensorFlow / Keras** | ≥ 2.16.0 | Trains and runs the ANN intent classifier; Keras 3 high-level API for model definition, training, and inference; GPU auto-detected (CPU fallback on native Windows ≥ TF 2.11) |
+| **NumPy**              | ≥ 1.26.0 | Bag-of-Words vector construction and numerical array handling during training and inference                                                                                   |
+| **scikit-learn**       | ≥ 1.4.0  | `LabelEncoder` for intent label encoding; `train_test_split` for validation split during training                                                                             |
 
 ### Database
 

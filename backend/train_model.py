@@ -1,0 +1,278 @@
+"""
+ANN Training Script — Smart Banking Assistant
+==============================================
+Trains a TensorFlow/Keras Artificial Neural Network for intent classification.
+
+Architecture:
+  Input (Bag-of-Words)
+  → Dense(256, ReLU) + BatchNorm + Dropout(0.5)
+  → Dense(128, ReLU) + BatchNorm + Dropout(0.4)
+  → Dense(64,  ReLU) + Dropout(0.2)
+  → Dense(num_classes, Softmax)
+
+Usage:
+  python train_model.py
+
+Outputs (saved to models/):
+  chatbot_model.keras  — trained Keras model
+  words.pkl            — stemmed vocabulary list
+  classes.pkl          — intent label list
+"""
+
+import json
+import pickle
+import logging
+import random
+import numpy as np
+from pathlib import Path
+
+import nltk
+from nltk.stem import LancasterStemmer
+from nltk.tokenize import word_tokenize
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s  %(levelname)-8s  %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
+# ── NLTK bootstrap ─────────────────────────────────────────────────────────────
+_NLTK_RESOURCES = {
+    "punkt":     "tokenizers/punkt",
+    "punkt_tab": "tokenizers/punkt_tab",
+    "stopwords": "corpora/stopwords",
+}
+
+for _name, _path in _NLTK_RESOURCES.items():
+    try:
+        nltk.data.find(_path)
+    except (LookupError, OSError):
+        logger.info(f"Downloading NLTK resource: {_name}")
+        nltk.download(_name, quiet=True)
+
+stemmer = LancasterStemmer()
+
+# ── Paths ──────────────────────────────────────────────────────────────────────
+BASE_DIR = Path(__file__).parent
+TRAINING_DATA_PATH = BASE_DIR / "intents" / "training_data.json"
+MODELS_DIR = BASE_DIR / "models"
+MODELS_DIR.mkdir(exist_ok=True)
+
+MODEL_PATH   = MODELS_DIR / "chatbot_model.keras"
+WORDS_PATH   = MODELS_DIR / "words.pkl"
+CLASSES_PATH = MODELS_DIR / "classes.pkl"
+
+
+# ── Data helpers ───────────────────────────────────────────────────────────────
+
+def load_training_data() -> dict:
+    logger.info(f"Loading training data from {TRAINING_DATA_PATH}")
+    with open(TRAINING_DATA_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def tokenize_and_stem(sentence: str) -> list[str]:
+    """Lower-case tokenize then Lancaster-stem, keeping only alpha tokens."""
+    tokens = word_tokenize(sentence.lower())
+    return [stemmer.stem(t) for t in tokens if t.isalpha()]
+
+
+def preprocess(data: dict) -> tuple[list, list, list]:
+    """
+    Returns:
+        words     – sorted unique stemmed vocabulary
+        classes   – sorted unique intent tags
+        documents – list of (stemmed_tokens, tag)
+    """
+    words: list[str] = []
+    classes: list[str] = []
+    documents: list[tuple] = []
+
+    for intent in data["intents"]:
+        tag = intent["tag"]
+        if tag not in classes:
+            classes.append(tag)
+
+        for pattern in intent["patterns"]:
+            stems = tokenize_and_stem(pattern)
+            words.extend(stems)
+            documents.append((stems, tag))
+
+    words = sorted(set(words))
+    classes = sorted(classes)
+
+    logger.info(
+        f"Preprocessed  →  {len(words)} unique stems  |  "
+        f"{len(classes)} classes  |  {len(documents)} samples"
+    )
+    return words, classes, documents
+
+
+def create_training_set(
+    words: list, classes: list, documents: list
+) -> tuple[np.ndarray, np.ndarray]:
+    """Convert documents to one-hot bag-of-words features and label vectors."""
+    X, y = [], []
+
+    for stems, tag in documents:
+        stems_set = set(stems)
+        bow = [1.0 if w in stems_set else 0.0 for w in words]
+        label = [1.0 if c == tag else 0.0 for c in classes]
+        X.append(bow)
+        y.append(label)
+
+    # Shuffle to avoid ordering bias during validation split
+    combined = list(zip(X, y))
+    random.shuffle(combined)
+    X, y = zip(*combined)
+
+    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
+
+
+# ── Model builder ──────────────────────────────────────────────────────────────
+
+def build_model(input_size: int, output_size: int):
+    """
+    Feedforward ANN for multi-class intent classification.
+
+    Layers:
+      Dense(256) → BatchNorm → Dropout(0.5)
+      Dense(128) → BatchNorm → Dropout(0.4)
+      Dense(64)              → Dropout(0.2)
+      Dense(output_size, softmax)
+
+    Regularisation: L2(1e-3) on first two dense layers + Dropout.
+    Optimiser: Adam with cosine-decay learning rate schedule.
+    """
+    import tensorflow as tf
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
+    from tensorflow.keras.optimizers import Adam
+    from tensorflow.keras.regularizers import l2
+
+    model = Sequential(
+        [
+            Dense(
+                256,
+                input_shape=(input_size,),
+                activation="relu",
+                kernel_regularizer=l2(1e-3),
+                name="hidden_1",
+            ),
+            BatchNormalization(name="bn_1"),
+            Dropout(0.5, name="drop_1"),
+            Dense(
+                128,
+                activation="relu",
+                kernel_regularizer=l2(1e-3),
+                name="hidden_2",
+            ),
+            BatchNormalization(name="bn_2"),
+            Dropout(0.4, name="drop_2"),
+            Dense(64, activation="relu", name="hidden_3"),
+            Dropout(0.2, name="drop_3"),
+            Dense(output_size, activation="softmax", name="output"),
+        ],
+        name="banking_intent_ann",
+    )
+
+    lr_schedule = tf.keras.optimizers.schedules.CosineDecayRestarts(
+        initial_learning_rate=1e-3,
+        first_decay_steps=50,
+        t_mul=2.0,
+        m_mul=0.9,
+    )
+
+    model.compile(
+        optimizer=Adam(learning_rate=lr_schedule),
+        loss="categorical_crossentropy",
+        metrics=["accuracy"],
+    )
+    return model
+
+
+# ── Training entry point ───────────────────────────────────────────────────────
+
+def train():
+    import tensorflow as tf
+    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+
+    logger.info(f"TensorFlow version: {tf.__version__}")
+
+    # ── 1. Load & preprocess ───────────────────────────────────────────────────
+    data = load_training_data()
+    words, classes, documents = preprocess(data)
+    X, y = create_training_set(words, classes, documents)
+
+    logger.info(f"Training matrix shape: X={X.shape}  y={y.shape}")
+
+    # ── 2. Build model ─────────────────────────────────────────────────────────
+    model = build_model(len(words), len(classes))
+    model.summary(print_fn=logger.info)
+
+    # ── 3. Callbacks ───────────────────────────────────────────────────────────
+    callbacks = [
+        EarlyStopping(
+            monitor="val_accuracy",
+            patience=40,
+            restore_best_weights=True,
+            verbose=1,
+        ),
+        # ReduceLROnPlateau removed: incompatible with CosineDecayRestarts
+        # schedule — Keras 3 forbids setting lr on a schedule-backed optimizer.
+        ModelCheckpoint(
+            filepath=str(MODEL_PATH),
+            monitor="val_accuracy",
+            save_best_only=True,
+            verbose=0,
+        ),
+    ]
+
+    # ── 4. Train ───────────────────────────────────────────────────────────────
+    logger.info("Starting training …")
+    history = model.fit(
+        X,
+        y,
+        epochs=400,
+        batch_size=8,
+        validation_split=0.15,
+        callbacks=callbacks,
+        verbose=1,
+    )
+
+    # ── 5. Final evaluation ────────────────────────────────────────────────────
+    loss, accuracy = model.evaluate(X, y, verbose=0)
+    logger.info(f"Training set  →  accuracy: {accuracy:.4f}  |  loss: {loss:.4f}")
+
+    val_acc = max(history.history.get("val_accuracy", [0.0]))
+    logger.info(f"Best validation accuracy: {val_acc:.4f}")
+
+    # ── 6. Persist artefacts ───────────────────────────────────────────────────
+    # ModelCheckpoint already saved the best model; save again explicitly to
+    # ensure the final best-weights version is on disk.
+    model.save(str(MODEL_PATH))
+    logger.info(f"Model saved  → {MODEL_PATH}")
+
+    with open(WORDS_PATH, "wb") as f:
+        pickle.dump(words, f)
+    logger.info(f"Vocabulary saved  → {WORDS_PATH}  ({len(words)} stems)")
+
+    with open(CLASSES_PATH, "wb") as f:
+        pickle.dump(classes, f)
+    logger.info(f"Classes saved  → {CLASSES_PATH}  ({len(classes)} intents)")
+
+    logger.info(
+        "\n"
+        "═══════════════════════════════════════════════════\n"
+        "  Training complete!\n"
+        f"  Model:   {MODEL_PATH}\n"
+        f"  Classes: {classes}\n"
+        "  Start the FastAPI server to use the ANN model.\n"
+        "═══════════════════════════════════════════════════"
+    )
+    return history
+
+
+if __name__ == "__main__":
+    train()

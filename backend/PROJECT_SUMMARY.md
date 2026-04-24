@@ -12,13 +12,17 @@ Your complete Smart Banking Assistant backend system is ready! Here's everything
 
 - ✅ `main.py` - FastAPI app with CORS and logging
 - ✅ `db.py` - Complete database layer with all queries
-- ✅ `nlp.py` - spaCy-based intent detection
+- ✅ `nlp.py` - NLTK-based NLP processing and keyword intent detection
 - ✅ `models/__init__.py` - Models package
 - ✅ `models/chat_models.py` - Pydantic request/response models
 - ✅ `routes/__init__.py` - Routes package
 - ✅ `routes/chat.py` - Chat API endpoint
 - ✅ `services/__init__.py` - Services package
 - ✅ `services/chat_service.py` - Business logic layer
+- ✅ `train_model.py` - TensorFlow/Keras ANN training script
+- ✅ `intents/training_data.json` - ANN training patterns
+- ✅ `intents/intent_keywords.json` - Keyword fallback lists
+- ✅ `intents/intent_info.json` - Intent metadata
 
 ### 📋 Configuration (5 files)
 
@@ -55,7 +59,8 @@ Your complete Smart Banking Assistant backend system is ready! Here's everything
 ### ✅ Tech Stack
 
 - ✅ FastAPI for backend API
-- ✅ spaCy for NLP processing
+- ✅ NLTK for NLP preprocessing
+- ✅ TensorFlow/Keras for ANN intent classification
 - ✅ MySQL as database
 - ✅ mysql-connector-python for DB connection
 
@@ -69,9 +74,9 @@ Your complete Smart Banking Assistant backend system is ready! Here's everything
 
 #### 2. NLP Processing ✅
 
-- ✅ spaCy integration
-- ✅ Intent detection with lemmatization
-- ✅ Keyword matching
+- ✅ NLTK integration
+- ✅ ANN intent classification (TensorFlow/Keras)
+- ✅ Intent detection with stemming and bag-of-words
 - ✅ All required intents implemented:
   - ✅ GREETING (hello, hi)
   - ✅ BALANCE (balance, money, account)
@@ -165,7 +170,19 @@ mysql -u root -p
 SOURCE schema.sql;
 ```
 
-### Step 3: Run Server
+### Step 3: Train the AI Model
+
+```bash
+# Windows
+.\venv\Scripts\activate
+python train_model.py
+
+# Linux/Mac
+source venv/bin/activate
+python train_model.py
+```
+
+### Step 4: Run Server
 
 ```bash
 # Edit .env first with your DB password

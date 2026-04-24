@@ -8,8 +8,15 @@ pydantic>=2.10.0
 # Database
 mysql-connector-python==8.3.0
 
-# NLP
-spacy>=3.7.0
+# Deep Learning — Intent Classification ANN
+tensorflow>=2.16.0          # Includes Keras 3; GPU support auto-detected
+numpy>=1.26.0               # Numerical arrays / bag-of-words vectors
+
+# NLP preprocessing
+nltk>=3.8.1                 # Tokenisation + Lancaster stemming
+
+# Machine Learning utilities
+scikit-learn>=1.4.0         # LabelEncoder, train_test_split (used in training)
 
 # Utilities
 python-dotenv==1.0.0

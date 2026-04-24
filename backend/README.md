@@ -1,6 +1,6 @@
 # Smart Banking Assistant - Backend API
 
-A complete AI-powered banking chatbot backend built with FastAPI, spaCy, and MySQL.
+A complete AI-powered banking chatbot backend built with FastAPI, NLTK, TensorFlow/Keras, and MySQL.
 
 ## 🚀 Quick Start
 
@@ -12,17 +12,21 @@ A complete AI-powered banking chatbot backend built with FastAPI, spaCy, and MyS
 
 ### 🏃 Fast Setup (For Windows)
 
-```bash
+```bat
 # 1. Run the automated setup script
 setup.bat
 
 # 2. Setup database (in MySQL)
 mysql -u root -p < schema.sql
 
-# 3. Configure database password in db.py or create .env file
+# 3. Configure credentials — copy .env.example to .env and set DB_PASSWORD
+copy .env.example .env
 
-# 4. Start the server
-venv\Scripts\activate
+# 4. Train the AI model (required once before first run)
+.\venv\Scripts\activate
+python train_model.py
+
+# 5. Start the server
 uvicorn main:app --reload
 ```
 
@@ -36,10 +40,14 @@ chmod +x setup.sh
 # 2. Setup database (in MySQL)
 mysql -u root -p < schema.sql
 
-# 3. Configure database password in db.py or create .env file
+# 3. Configure credentials — copy .env.example to .env and set DB_PASSWORD
+cp .env.example .env
 
-# 4. Start the server
+# 4. Train the AI model (required once before first run)
 source venv/bin/activate
+python train_model.py
+
+# 5. Start the server
 uvicorn main:app --reload
 ```
 
@@ -51,7 +59,7 @@ uvicorn main:app --reload
 
 ## 📋 Features
 
-- **Natural Language Processing**: Intent detection using spaCy
+- **Natural Language Processing**: Intent classification using an NLTK + TensorFlow/Keras ANN (trained via `train_model.py`)
 - **Smart Responses**: Context-aware replies based on user intent
 - **Database Integration**: MySQL for user accounts, transactions, and knowledge base
 - **Learning System**: Stores unknown questions for future improvements
@@ -91,11 +99,13 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Download spaCy Model
+### 4. Train the AI Model
 
 ```bash
-python -m spacy download en_core_web_sm
+python train_model.py
 ```
+
+This generates `models/chatbot_model.keras`, `models/words.pkl`, and `models/classes.pkl`. Run this once before starting the server, and again whenever `intents/training_data.json` is updated.
 
 ### 5. Setup Database
 
@@ -119,27 +129,27 @@ SOURCE schema.sql;
 
 ### 6. Configure Database Connection
 
-Edit the database configuration in [db.py](db.py):
+Create a `.env` file from the template (recommended):
 
-```python
-DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'your_mysql_password',  # Update this
-    'database': 'banking_chatbot',
-    'port': 3306
-}
+```bash
+# Windows
+copy .env.example .env
+
+# Linux/Mac
+cp .env.example .env
 ```
 
-**Or create a `.env` file** (recommended for production):
+Then edit `.env` with your MySQL credentials:
 
-```
+```env
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_mysql_password
 DB_NAME=banking_chatbot
 DB_PORT=3306
 ```
+
+> The defaults in `.env.example` use password `mysql`. Update `DB_PASSWORD` to match your MySQL setup.
 
 ---
 
@@ -246,11 +256,13 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 - Check credentials in [db.py](db.py)
 - Ensure database exists: `SHOW DATABASES;`
 
-### spaCy model not found
+### Model files not found / chatbot not responding correctly
 
 ```bash
-python -m spacy download en_core_web_sm
+python train_model.py
 ```
+
+This generates the required `models/chatbot_model.keras`, `models/words.pkl`, and `models/classes.pkl` files.
 
 ### Port already in use
 
@@ -388,26 +400,34 @@ print(response.json())
 backend/
 ├── main.py                 # FastAPI application entry point
 ├── db.py                   # Database connection and queries
-├── nlp.py                  # NLP processing with spaCy
+├── nlp.py                  # NLP processing with NLTK
+├── train_model.py          # ANN training script
 ├── requirements.txt        # Python dependencies
-├── schema.sql             # MySQL database schema
-├── .env.example           # Environment variables template
-├── README.md              # This file
-├── models/                # Pydantic models
+├── schema.sql              # MySQL database schema
+├── .env.example            # Environment variables template
+├── README.md               # This file
+├── intents/                # Training data and intent definitions
+│   ├── training_data.json  # ANN training patterns
+│   ├── intent_keywords.json # Keyword fallback lists
+│   └── intent_info.json    # Intent metadata
+├── models/                 # Pydantic models + trained ANN artefacts
 │   ├── __init__.py
-│   └── chat_models.py     # Chat request/response models
-├── routes/                # API routes
+│   ├── chat_models.py      # Chat request/response models
+│   ├── chatbot_model.keras # Trained Keras model (generated)
+│   ├── words.pkl           # Stemmed vocabulary (generated)
+│   └── classes.pkl         # Intent labels (generated)
+├── routes/                 # API routes
 │   ├── __init__.py
-│   └── chat.py            # Chat endpoint
-└── services/              # Business logic
+│   └── chat.py             # Chat endpoint
+└── services/               # Business logic
     ├── __init__.py
-    └── chat_service.py    # Chat processing service
+    └── chat_service.py     # Chat processing service
 ```
 
 ## 🔍 How It Works
 
 1. **User Input**: User sends a message via POST /api/chat
-2. **Intent Detection**: spaCy processes the text and detects intent using keyword matching and lemmatization
+2. **Intent Detection**: NLTK preprocesses the text (tokenization, stemming) and the trained TensorFlow/Keras ANN classifies the intent; keyword matching is used as a fallback
 3. **Request Routing**: Based on intent, the appropriate handler is called
 4. **Data Retrieval**: If needed, data is fetched from MySQL database
 5. **Response Generation**: A structured response is created and returned
