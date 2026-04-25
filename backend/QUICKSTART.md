@@ -49,19 +49,27 @@ pip install -r requirements.txt
 
 ### 2. Setup Database
 
-Log in to MySQL and import the schema:
+Apply all versioned migrations to create the database and tables:
+
+```bat
+# Windows
+.\venv\Scripts\activate
+python migrate.py up
+```
 
 ```bash
-mysql -u root -p < schema.sql
+# Linux/Mac
+source venv/bin/activate
+python migrate.py up
 ```
 
-Or inside the MySQL shell:
+This auto-creates the `banking_chatbot` database and applies all migrations in order.
 
-```sql
-SOURCE schema.sql;
+**Check migration status at any time:**
+
+```bash
+python migrate.py status
 ```
-
-This creates the `banking_chatbot` database and all required tables.
 
 ---
 
@@ -194,7 +202,7 @@ See [README.md](README.md) for complete documentation.
 - [ ] MySQL running
 - [ ] Virtual environment created and activated
 - [ ] Dependencies installed (`pip install -r requirements.txt`)
-- [ ] Database created (`schema.sql` imported)
+- [ ] Database migrations applied (`python migrate.py up`)
 - [ ] `.env` configured with correct DB credentials
 - [ ] Model trained (`python train_model.py`)
 - [ ] Server starts without errors (`uvicorn main:app --reload`)

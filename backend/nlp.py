@@ -191,6 +191,11 @@ def _keyword_fallback(user_input: str) -> Tuple[str, float]:
 
 # ── Primary intent detection (ANN) ────────────────────────────────────────────
 
+def _has_meaningful_text(text: str) -> bool:
+    """Return True only when *text* contains at least 2 alphabetic characters."""
+    return sum(1 for c in text if c.isalpha()) >= 2
+
+
 def detect_intent(user_input: str) -> Tuple[str, float]:
     """
     Detect the intent of *user_input*.
@@ -204,6 +209,11 @@ def detect_intent(user_input: str) -> Tuple[str, float]:
     if not user_input:
         return "UNKNOWN", 0.0
 
+    # Reject messages that contain no real words (pure numbers / symbols)
+    if not _has_meaningful_text(user_input):
+        logger.info(f"Input rejected as non-text: {user_input!r}")
+        return "UNKNOWN", 0.0
+
     # ── ANN path ───────────────────────────────────────────────────────────────
     if _ann_ready and _ann_model is not None:
         try:
@@ -211,7 +221,7 @@ def detect_intent(user_input: str) -> Tuple[str, float]:
             predictions: np.ndarray = _ann_model.predict(bow, verbose=0)[0]
 
             # Collect predictions above a minimum threshold
-            THRESHOLD = 0.25
+            THRESHOLD = 0.50
             results = [
                 (_ann_classes[i], float(predictions[i]))
                 for i in range(len(predictions))

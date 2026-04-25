@@ -122,18 +122,16 @@ def _require_account_selection() -> Dict[str, Any]:
 
 def handle_greeting_intent() -> Dict[str, Any]:
     """Handle GREETING intent"""
+    import random
+    replies = [
+        "Hello! How can I help you with your banking today?",
+        "Hi there! What can I do for you today?",
+        "Hey! How can I assist you with your banking needs?",
+        "Good day! How can I help you today?",
+        "Hello! Feel free to ask me about your account, loans, transfers, or any other banking service.",
+    ]
     return {
-        "reply": (
-            "Hello! Welcome to Smart Banking Assistant.\n\n"
-            "I'm here to help make your banking experience as easy as possible. "
-            "You can ask me about:\n\n"
-            "• Account balance and recent transactions\n"
-            "• Loan options and interest rates\n"
-            "• Transfers and payments\n"
-            "• Account services and fees\n"
-            "• Digital banking support\n\n"
-            "How can I assist you today?"
-        ),
+        "reply": random.choice(replies),
         "intent": "GREETING",
         "confidence": 1.0
     }
