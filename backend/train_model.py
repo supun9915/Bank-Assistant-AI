@@ -55,7 +55,7 @@ stemmer = LancasterStemmer()
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).parent
-TRAINING_DATA_PATH = BASE_DIR / "intents" / "training_data.json"
+TRAINING_DATA_PATH = BASE_DIR / "intents" / "intents.json"
 MODELS_DIR = BASE_DIR / "models"
 MODELS_DIR.mkdir(exist_ok=True)
 

@@ -14,12 +14,12 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-echo "[1/6] Python found"
+echo "[1/5] Python found"
 python3 --version
 
 # Create virtual environment
 echo ""
-echo "[2/6] Creating virtual environment..."
+echo "[2/5] Creating virtual environment..."
 if [ ! -d "venv" ]; then
     python3 -m venv venv
     echo "Virtual environment created"
@@ -29,12 +29,12 @@ fi
 
 # Activate virtual environment
 echo ""
-echo "[3/6] Activating virtual environment..."
+echo "[3/5] Activating virtual environment..."
 source venv/bin/activate
 
 # Install dependencies
 echo ""
-echo "[4/6] Installing Python packages..."
+echo "[4/5] Installing Python packages..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
@@ -43,19 +43,9 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Download spaCy model
-echo ""
-echo "[5/6] Downloading spaCy language model..."
-python -m spacy download en_core_web_sm
-
-if [ $? -ne 0 ]; then
-    echo "[WARNING] Failed to download spaCy model"
-    echo "You may need to run this manually: python -m spacy download en_core_web_sm"
-fi
-
 # Create .env file if it doesn't exist
 echo ""
-echo "[6/6] Setting up environment variables..."
+echo "[5/5] Setting up environment variables..."
 if [ ! -f ".env" ]; then
     cp .env.example .env
     echo ".env file created from .env.example"

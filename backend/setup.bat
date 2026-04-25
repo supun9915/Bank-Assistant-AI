@@ -16,12 +16,12 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [1/6] Python found
+echo [1/5] Python found
 python --version
 
 REM Create virtual environment
 echo.
-echo [2/6] Creating virtual environment...
+echo [2/5] Creating virtual environment...
 if not exist "venv" (
     python -m venv venv
     echo Virtual environment created
@@ -31,12 +31,12 @@ if not exist "venv" (
 
 REM Activate virtual environment
 echo.
-echo [3/6] Activating virtual environment...
+echo [3/5] Activating virtual environment...
 call venv\Scripts\activate.bat
 
 REM Install dependencies
 echo.
-echo [4/6] Installing Python packages...
+echo [4/5] Installing Python packages...
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 
@@ -46,19 +46,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Download spaCy model
-echo.
-echo [5/6] Downloading spaCy language model...
-python -m spacy download en_core_web_sm
-
-if errorlevel 1 (
-    echo [WARNING] Failed to download spaCy model
-    echo You may need to run manually: python -m spacy download en_core_web_sm
-)
-
 REM Create .env file if it doesn't exist
 echo.
-echo [6/6] Setting up environment variables...
+echo [5/5] Setting up environment variables...
 if not exist ".env" (
     copy .env.example .env
     echo .env file created from .env.example

@@ -53,7 +53,22 @@
         "Hi I need some help",
         "Hey can you assist me",
         "Hello I have a question"
-      ]
+      ],
+      "keywords": [
+        "hello",
+        "hi",
+        "hey",
+        "greetings",
+        "good morning",
+        "good afternoon",
+        "good evening",
+        "howdy",
+        "hola",
+        "namaste"
+      ],
+      "description": "User greeting or salutation",
+      "requires_db": false,
+      "examples": ["Hello", "Hi", "Hey", "Good morning", "Good evening"]
     },
     {
       "tag": "BALANCE",
@@ -107,6 +122,25 @@
         "Check savings balance",
         "Check current balance",
         "What is my remaining funds"
+      ],
+      "keywords": [
+        "balance",
+        "money",
+        "amount",
+        "fund",
+        "cash",
+        "saving",
+        "checking",
+        "total",
+        "available",
+        "remaining"
+      ],
+      "description": "Query about account balance",
+      "requires_db": true,
+      "examples": [
+        "What is my account balance?",
+        "How much money do I have?",
+        "Check my balance"
       ]
     },
     {
@@ -161,6 +195,31 @@
         "Money in and out",
         "View my account statement online",
         "Monthly transaction summary"
+      ],
+      "keywords": [
+        "transaction",
+        "history",
+        "statement",
+        "record",
+        "activity",
+        "purchase",
+        "payment",
+        "transfer",
+        "withdrawal",
+        "deposit",
+        "recent",
+        "last",
+        "previous",
+        "spending",
+        "debit",
+        "credit"
+      ],
+      "description": "Query about transaction history",
+      "requires_db": true,
+      "examples": [
+        "Show my recent transactions",
+        "Transaction history",
+        "What did I spend money on?"
       ]
     },
     {
@@ -214,6 +273,33 @@
         "Agricultural loan",
         "What is a gold loan",
         "Refinancing options"
+      ],
+      "keywords": [
+        "loan",
+        "borrow",
+        "mortgage",
+        "emi",
+        "installment",
+        "lending",
+        "debt",
+        "financing",
+        "advance",
+        "home loan",
+        "car loan",
+        "personal loan",
+        "repayment",
+        "loan interest",
+        "loan eligibility",
+        "credit loan",
+        "loan application",
+        "loan option"
+      ],
+      "description": "Query about loans or credit",
+      "requires_db": false,
+      "examples": [
+        "I need a loan",
+        "What loan options do you have?",
+        "Loan interest rates"
       ]
     },
     {
@@ -269,6 +355,42 @@
         "What new accounts can I create",
         "How long does it take to open an account",
         "What is the minimum deposit to open an account"
+      ],
+      "keywords": [
+        "open account",
+        "close account",
+        "account opening",
+        "update account",
+        "change phone",
+        "update email",
+        "activate account",
+        "link account",
+        "account number",
+        "account statement",
+        "account requirement",
+        "account detail",
+        "update detail",
+        "change number",
+        "email address",
+        "account type",
+        "types of account",
+        "account types",
+        "what accounts",
+        "savings account",
+        "checking account",
+        "current account",
+        "fixed deposit",
+        "create account",
+        "new account",
+        "joint account",
+        "account option"
+      ],
+      "description": "Account management and services",
+      "requires_db": false,
+      "examples": [
+        "How to open a bank account?",
+        "How do I close my account?",
+        "How to update email address?"
       ]
     },
     {
@@ -322,6 +444,32 @@
         "Security tips for online banking",
         "How to verify my identity",
         "Identity verification process"
+      ],
+      "keywords": [
+        "password",
+        "reset password",
+        "forgot password",
+        "lost card",
+        "stolen card",
+        "block card",
+        "fraud",
+        "secure",
+        "otp",
+        "contact support",
+        "card issue",
+        "report fraud",
+        "account issue",
+        "card stolen",
+        "card lost",
+        "hack",
+        "security"
+      ],
+      "description": "Security, password, or card issues",
+      "requires_db": false,
+      "examples": [
+        "I forgot my password",
+        "My card is lost",
+        "How to block my card?"
       ]
     },
     {
@@ -377,6 +525,29 @@
         "Reverse a payment",
         "Instant transfer options",
         "Real time payment options"
+      ],
+      "keywords": [
+        "send money",
+        "make payment",
+        "pay bill",
+        "wire transfer",
+        "online transfer",
+        "bank transfer",
+        "money transfer",
+        "international transfer",
+        "send funds",
+        "transfer funds",
+        "pay online",
+        "payment option",
+        "bill payment",
+        "remittance"
+      ],
+      "description": "Money transfer or payment actions",
+      "requires_db": false,
+      "examples": [
+        "How to transfer money?",
+        "Send money to another account",
+        "How to pay bills?"
       ]
     },
     {
@@ -432,6 +603,30 @@
         "NSF fee information",
         "Account closure fee",
         "Fee for certified cheque"
+      ],
+      "keywords": [
+        "fee",
+        "charge",
+        "minimum balance",
+        "maintenance charge",
+        "overdraft",
+        "withdrawal limit",
+        "daily limit",
+        "atm limit",
+        "service charge",
+        "bank charges",
+        "transaction limit",
+        "interest rate",
+        "account fee",
+        "bank fee",
+        "limit"
+      ],
+      "description": "Fees, charges, and account limits",
+      "requires_db": false,
+      "examples": [
+        "What are bank charges?",
+        "ATM withdrawal limit?",
+        "Minimum balance required?"
       ]
     },
     {
@@ -487,6 +682,29 @@
         "Download bank statement from app",
         "Multiple device login for banking",
         "Internet banking compatible browsers"
+      ],
+      "keywords": [
+        "mobile banking",
+        "internet banking",
+        "online banking",
+        "bank app",
+        "mobile app",
+        "register online",
+        "digital banking",
+        "activate mobile",
+        "download app",
+        "net banking",
+        "mobile login",
+        "online login",
+        "app not working",
+        "online balance"
+      ],
+      "description": "Mobile and internet banking services",
+      "requires_db": false,
+      "examples": [
+        "How to use mobile banking?",
+        "Internet banking login",
+        "How to download bank app?"
       ]
     },
     {
@@ -541,6 +759,37 @@
         "Bank routing number",
         "What countries does the bank operate in",
         "Bank social media contact"
+      ],
+      "keywords": [
+        "working hours",
+        "working times",
+        "bank hours",
+        "bank times",
+        "office hours",
+        "open hours",
+        "opening hours",
+        "nearest branch",
+        "contact bank",
+        "nearest atm",
+        "customer service number",
+        "product offer",
+        "services offered",
+        "how can you help",
+        "about bank",
+        "locate branch",
+        "bank location",
+        "helpline",
+        "bank open",
+        "bank close",
+        "what time",
+        "when open"
+      ],
+      "description": "General bank information and support",
+      "requires_db": false,
+      "examples": [
+        "What are your working hours?",
+        "Where is nearest branch?",
+        "How to contact bank?"
       ]
     },
     {
@@ -595,7 +844,11 @@
         "What is the best restaurant nearby",
         "What should I have for dinner",
         "What is the speed of light"
-      ]
+      ],
+      "keywords": [],
+      "description": "Intent not recognized",
+      "requires_db": false,
+      "examples": []
     },
     {
       "tag": "CARDS",
@@ -650,6 +903,28 @@
         "Gift card",
         "Travel card",
         "Business credit card"
+      ],
+      "keywords": [
+        "credit card",
+        "debit card",
+        "card",
+        "activate card",
+        "card limit",
+        "card statement",
+        "card replacement",
+        "contactless",
+        "virtual card",
+        "prepaid card",
+        "card blocked",
+        "card declined",
+        "card expiry"
+      ],
+      "description": "Credit and debit card services",
+      "requires_db": false,
+      "examples": [
+        "Apply for a credit card",
+        "How to activate my card?",
+        "What is my credit limit?"
       ]
     },
     {
@@ -705,6 +980,29 @@
         "Investment withdrawal",
         "How to redeem investments",
         "Open an investment account"
+      ],
+      "keywords": [
+        "invest",
+        "investment",
+        "mutual fund",
+        "bond",
+        "stock",
+        "portfolio",
+        "wealth",
+        "pension",
+        "retirement",
+        "etf",
+        "fund",
+        "treasury bill",
+        "robo advisor",
+        "capital gains"
+      ],
+      "description": "Investment and wealth management options",
+      "requires_db": false,
+      "examples": [
+        "Investment options available",
+        "How to buy mutual funds?",
+        "Best investment options?"
       ]
     },
     {
@@ -760,6 +1058,25 @@
         "Request credit report",
         "Dispute credit report error",
         "Credit score simulator"
+      ],
+      "keywords": [
+        "credit score",
+        "credit rating",
+        "credit report",
+        "credit history",
+        "credit repair",
+        "credit bureau",
+        "credit utilization",
+        "credit freeze",
+        "rebuild credit",
+        "credit inquiry"
+      ],
+      "description": "Credit score and credit history inquiries",
+      "requires_db": false,
+      "examples": [
+        "What is my credit score?",
+        "How to improve credit score?",
+        "Free credit report"
       ]
     },
     {
@@ -815,6 +1132,28 @@
         "Where to complain about the bank",
         "Customer grievance",
         "Banking dispute resolution"
+      ],
+      "keywords": [
+        "complaint",
+        "complain",
+        "dispute",
+        "overcharged",
+        "wrong transaction",
+        "bank error",
+        "feedback",
+        "grievance",
+        "ombudsman",
+        "refund",
+        "compensation",
+        "escalate",
+        "unresolved"
+      ],
+      "description": "Customer complaints and feedback",
+      "requires_db": false,
+      "examples": [
+        "I want to file a complaint",
+        "Dispute a charge",
+        "How to submit a complaint?"
       ]
     },
     {
@@ -870,6 +1209,29 @@
         "Cross border payment",
         "Currency hedging",
         "Multi currency account"
+      ],
+      "keywords": [
+        "exchange rate",
+        "forex",
+        "currency",
+        "foreign currency",
+        "remittance",
+        "usd",
+        "eur",
+        "convert currency",
+        "travel money",
+        "currency conversion",
+        "exchange",
+        "dollar",
+        "euro",
+        "gbp"
+      ],
+      "description": "Foreign exchange and currency conversion services",
+      "requires_db": false,
+      "examples": [
+        "What is the exchange rate?",
+        "Convert USD to local currency",
+        "Buy foreign currency"
       ]
     },
     {
@@ -925,6 +1287,25 @@
         "Monthly interest on fixed deposit",
         "Compound interest on fixed deposit",
         "Fixed deposit account number"
+      ],
+      "keywords": [
+        "fixed deposit",
+        "fd",
+        "term deposit",
+        "maturity",
+        "fixed interest",
+        "deposit tenure",
+        "premature withdrawal",
+        "auto renewal",
+        "loan against fd",
+        "fixed deposit rate"
+      ],
+      "description": "Fixed deposit account information and management",
+      "requires_db": false,
+      "examples": [
+        "What is a fixed deposit?",
+        "Fixed deposit interest rates",
+        "How to open fixed deposit online?"
       ]
     },
     {
@@ -980,7 +1361,24 @@
         "Until next time",
         "It was nice chatting with you",
         "You can go now"
-      ]
+      ],
+      "keywords": [
+        "bye",
+        "goodbye",
+        "see you",
+        "thanks",
+        "thank you",
+        "farewell",
+        "done",
+        "exit",
+        "quit",
+        "end chat",
+        "all set",
+        "finished"
+      ],
+      "description": "User farewell or end of conversation",
+      "requires_db": false,
+      "examples": ["Bye", "Thank you", "Goodbye", "I'm done", "That's all"]
     }
   ]
 }

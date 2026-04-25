@@ -62,17 +62,30 @@ def _load_json(filename: str) -> dict:
         raise
 
 
+def _parse_intents(data: dict) -> tuple[dict, dict]:
+    """Derive INTENT_KEYWORDS and _INTENT_INFO dicts from intents.json data."""
+    keywords: dict = {}
+    info: dict = {}
+    for intent in data["intents"]:
+        tag = intent["tag"]
+        keywords[tag] = intent.get("keywords", [])
+        info[tag] = {
+            "description": intent.get("description", ""),
+            "requires_db":  intent.get("requires_db", False),
+            "examples":     intent.get("examples", []),
+        }
+    return keywords, info
+
+
 # ── Intent metadata (keywords + info) ─────────────────────────────────────────
-INTENT_KEYWORDS: dict = _load_json("intent_keywords.json")
-_INTENT_INFO:    dict = _load_json("intent_info.json")
-logger.info(f"Loaded {len(INTENT_KEYWORDS)} intents from JSON files")
+INTENT_KEYWORDS, _INTENT_INFO = _parse_intents(_load_json("intents.json"))
+logger.info(f"Loaded {len(INTENT_KEYWORDS)} intents from intents.json")
 
 
 def reload_intents() -> None:
-    """Reload intent metadata from JSON files at runtime."""
+    """Reload intent metadata from intents.json at runtime."""
     global INTENT_KEYWORDS, _INTENT_INFO
-    INTENT_KEYWORDS = _load_json("intent_keywords.json")
-    _INTENT_INFO    = _load_json("intent_info.json")
+    INTENT_KEYWORDS, _INTENT_INFO = _parse_intents(_load_json("intents.json"))
     logger.info(f"Reloaded {len(INTENT_KEYWORDS)} intents")
 
 
@@ -142,12 +155,6 @@ def _bag_of_words(text: str, words: list) -> np.ndarray:
     return np.array(
         [1.0 if w in stems else 0.0 for w in words], dtype=np.float32
     )
-
-
-# Kept for backwards compatibility with any code that calls extract_lemmas().
-def extract_lemmas(text: str) -> list[str]:
-    """Return stemmed alpha tokens (replaces the previous spaCy lemmatiser)."""
-    return _tokenize_and_stem(text)
 
 
 # ── Keyword-matching fallback ──────────────────────────────────────────────────
