@@ -81,6 +81,46 @@ def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
     return execute_query(query, (user_id,), fetch_one=True)
 
 
+def get_user_by_email_and_account(email: str, id_number: str, account_number: str) -> Optional[Dict[str, Any]]:
+    """
+    Validate that the given email + id_number + account_number all belong to the same user.
+    Returns account info dict or None.
+    """
+    query = """
+        SELECT u.id AS user_id, u.name AS account_holder,
+               a.account_number, a.account_type, a.status
+        FROM users u
+        JOIN accounts a ON a.user_id = u.id
+        WHERE LOWER(u.email) = LOWER(%s)
+          AND u.id_number = %s
+          AND a.account_number = %s
+          AND a.status = 'active'
+        LIMIT 1
+    """
+    return execute_query(query, (email.strip(), id_number.strip(), account_number.strip()), fetch_one=True)
+
+
+def save_verified_user(email: str, id_number: str) -> bool:
+    """
+    Insert or update a verified user's email + id_number in the verified_users table.
+    """
+    try:
+        query = """
+            INSERT INTO verified_users (email, id_number)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE id_number = VALUES(id_number), updated_at = NOW()
+        """
+        result = execute_query(query, (email.strip().lower(), id_number.strip()))
+        if result is not None:
+            logger.info(f"Saved verified user: {email}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Error saving verified user: {e}")
+        return False
+
+
+
 def get_account_balance(user_id: int = 1) -> Optional[float]:
     """
     Fetch account balance for a user

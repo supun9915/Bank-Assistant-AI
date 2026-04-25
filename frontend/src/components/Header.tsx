@@ -1,11 +1,17 @@
-import React from "react";
-import { Bot, Shield, Wifi, WifiOff } from "lucide-react";
+import { Bot, Shield, Wifi, WifiOff, UserCheck, UserX } from "lucide-react";
+import { AccountInfo } from "./AccountPanel";
 
 interface HeaderProps {
   isOnline?: boolean;
+  accountInfo?: AccountInfo | null;
+  onOpenAccountPanel?: () => void;
 }
 
-export function Header({ isOnline = true }: HeaderProps) {
+export function Header({
+  isOnline = true,
+  accountInfo,
+  onOpenAccountPanel,
+}: HeaderProps) {
   return (
     <div className="relative flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-700 to-blue-600 z-10">
       {/* Left: avatar + title */}
@@ -44,10 +50,42 @@ export function Header({ isOnline = true }: HeaderProps) {
         </div>
       </div>
 
-      {/* Right: secure badge */}
-      <div className="flex items-center space-x-1.5 bg-white/15 rounded-full px-3 py-1.5">
-        <Shield size={13} className="text-green-300" />
-        <span className="text-[11px] text-white/90 font-medium">Secure</span>
+      {/* Right: account button + secure badge */}
+      <div className="flex items-center space-x-2">
+        <button
+          onClick={onOpenAccountPanel}
+          title={
+            accountInfo
+              ? `Account: ${accountInfo.account_holder}`
+              : "Connect your account"
+          }
+          className={`flex items-center space-x-1.5 rounded-full px-3 py-1.5 transition-colors ${
+            accountInfo
+              ? "bg-green-500/30 hover:bg-green-500/50 border border-green-400/40"
+              : "bg-white/15 hover:bg-white/25 border border-white/20"
+          }`}
+        >
+          {accountInfo ? (
+            <>
+              <UserCheck size={13} className="text-green-300" />
+              <span className="text-[11px] text-green-200 font-medium max-w-[80px] truncate">
+                {accountInfo.account_holder.split(" ")[0]}
+              </span>
+            </>
+          ) : (
+            <>
+              <UserX size={13} className="text-white/70" />
+              <span className="text-[11px] text-white/70 font-medium">
+                My Account
+              </span>
+            </>
+          )}
+        </button>
+
+        <div className="flex items-center space-x-1.5 bg-white/15 rounded-full px-3 py-1.5">
+          <Shield size={13} className="text-green-300" />
+          <span className="text-[11px] text-white/90 font-medium">Secure</span>
+        </div>
       </div>
     </div>
   );

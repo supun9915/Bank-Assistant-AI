@@ -9,7 +9,8 @@ from db import (
     get_account_balance,
     get_recent_transactions,
     save_unknown_question,
-    save_chat_log
+    save_chat_log,
+    get_user_by_email_and_account,
 )
 
 logger = logging.getLogger(__name__)
@@ -98,6 +99,26 @@ def format_transactions_response(transactions: list) -> str:
 
 
 # ── Intent handlers ───────────────────────────────────────────────────────────
+
+# Personal-data intents that require an account to be selected
+_ACCOUNT_REQUIRED_INTENTS = frozenset(["BALANCE", "TRANSACTIONS"])
+
+
+def _require_account_selection() -> Dict[str, Any]:
+    """Reply telling the user to verify their account first."""
+    return {
+        "reply": (
+            "🔒 This information is personal to your account.\n\n"
+            "To view your account details, please verify your identity first:\n\n"
+            "1️⃣  Click the 👤 **Account** button in the top-right of the chat\n"
+            "2️⃣  Enter your registered Email, National ID Number, and Account Number\n"
+            "3️⃣  Enter the 6-digit OTP sent to your email\n\n"
+            "Once verified, I can show you your personal banking information."
+        ),
+        "intent": "ACCOUNT_REQUIRED",
+        "confidence": 1.0,
+    }
+
 
 def handle_greeting_intent() -> Dict[str, Any]:
     """Handle GREETING intent"""
@@ -613,15 +634,20 @@ def handle_unknown_intent(user_message: str) -> Dict[str, Any]:
 
 # ── Main processor ────────────────────────────────────────────────────────────
 
-def process_chat_message(message: str, user_id: int = 1, last_intent: str = None) -> Dict[str, Any]:
+def process_chat_message(
+    message: str,
+    user_id: int = 1,
+    last_intent: str = None,
+    account_number: str = None,
+) -> Dict[str, Any]:
     """
     Main function to process chat messages.
-    Coordinates intent detection and response generation.
 
     Args:
         message: User input message
-        user_id: User ID for personalized responses
+        user_id: User ID (resolved from account_number when provided)
         last_intent: Intent from the previous turn (for context-aware follow-ups)
+        account_number: Verified account number supplied by the frontend
 
     Returns:
         Dictionary with reply and metadata
@@ -641,10 +667,16 @@ def process_chat_message(message: str, user_id: int = 1, last_intent: str = None
             response = handle_greeting_intent()
 
         elif intent == 'BALANCE':
-            response = handle_balance_intent(user_id)
+            if not account_number:
+                response = _require_account_selection()
+            else:
+                response = handle_balance_intent(user_id)
 
         elif intent == 'TRANSACTIONS':
-            response = handle_transactions_intent(user_id)
+            if not account_number:
+                response = _require_account_selection()
+            else:
+                response = handle_transactions_intent(user_id)
 
         elif intent == 'LOAN':
             response = handle_loan_intent(message)

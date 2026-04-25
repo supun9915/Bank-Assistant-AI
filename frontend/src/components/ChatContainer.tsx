@@ -4,6 +4,7 @@ import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
 import { TypingIndicator } from "./TypingIndicator";
 import { sendChatMessage } from "../api";
+import { AccountInfo } from "./AccountPanel";
 
 interface Message {
   id: string;
@@ -14,7 +15,15 @@ interface Message {
   confidence?: number;
 }
 
-export function ChatContainer() {
+interface ChatContainerProps {
+  accountInfo: AccountInfo | null;
+  onOpenAccountPanel: () => void;
+}
+
+export function ChatContainer({
+  accountInfo,
+  onOpenAccountPanel,
+}: ChatContainerProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -56,6 +65,8 @@ export function ChatContainer() {
       const data = await sendChatMessage({
         message: text,
         last_intent: lastIntentRef.current,
+        account_number: accountInfo?.account_number,
+        user_id: accountInfo?.user_id,
       });
 
       if (data.intent) lastIntentRef.current = data.intent;
@@ -93,8 +104,12 @@ export function ChatContainer() {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-lg h-[700px] max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
-      <Header isOnline={isOnline} />
+    <div className="flex flex-col w-full h-[700px] max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+      <Header
+        isOnline={isOnline}
+        accountInfo={accountInfo}
+        onOpenAccountPanel={onOpenAccountPanel}
+      />
 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 scrollbar-hide bg-gradient-to-b from-slate-50 to-blue-50/30">
         {messages.map((msg) => (

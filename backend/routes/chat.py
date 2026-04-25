@@ -40,7 +40,8 @@ async def chat(request: ChatRequest) -> ChatResponse:
         response_data = process_chat_message(
             message=request.message.strip(),
             user_id=request.user_id,
-            last_intent=request.last_intent
+            last_intent=request.last_intent,
+            account_number=request.account_number,
         )
         
         # Create response model

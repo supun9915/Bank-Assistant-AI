@@ -21,6 +21,10 @@ class ChatRequest(BaseModel):
         default=None,
         description="Intent detected from the previous message, used for context-aware follow-up responses"
     )
+    account_number: Optional[str] = Field(
+        default=None,
+        description="Verified account number for personal account queries"
+    )
     
     class Config:
         json_schema_extra = {
