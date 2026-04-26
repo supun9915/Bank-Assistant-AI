@@ -13,7 +13,7 @@ export function Header({
   onOpenAccountPanel,
 }: HeaderProps) {
   return (
-    <div className="relative flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-700 to-blue-600 z-10">
+    <div className="relative flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-blue-700 to-blue-600 z-10">
       {/* Left: avatar + title */}
       <div className="flex items-center space-x-3">
         <div className="relative">
@@ -28,7 +28,8 @@ export function Header({
         </div>
         <div>
           <h1 className="text-sm font-bold text-white tracking-wide">
-            Smart Banking Assistant
+            <span className="hidden sm:inline">Smart Banking Assistant</span>
+            <span className="sm:hidden">Banking Assistant</span>
           </h1>
           <div className="flex items-center space-x-1 mt-0.5">
             {isOnline ? (
@@ -68,7 +69,7 @@ export function Header({
           {accountInfo ? (
             <>
               <UserCheck size={13} className="text-green-300" />
-              <span className="text-[11px] text-green-200 font-medium max-w-[80px] truncate">
+              <span className="text-[11px] text-green-200 font-medium max-w-[60px] sm:max-w-[80px] truncate">
                 {accountInfo.account_holder.split(" ")[0]}
               </span>
             </>

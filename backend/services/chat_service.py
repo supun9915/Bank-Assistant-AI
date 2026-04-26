@@ -11,6 +11,8 @@ from db import (
     save_unknown_question,
     save_chat_log,
     get_user_by_email_and_account,
+    get_user_fixed_deposits,
+    get_user_pawning,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,6 +66,12 @@ def _try_context_fallback(message: str, last_intent: str) -> Optional[Dict[str, 
     if last_intent == "LOAN":
         if any(w in message_lower for w in ["lowest", "cheapest", "best", "which", "rate", "interest", "more"]):
             return handle_loan_intent(message)
+    if last_intent == "FIXED_DEPOSIT":
+        if any(w in message_lower for w in ["rate", "interest", "maturity", "renew", "break", "more", "detail"]):
+            return handle_fixed_deposit_intent(message)
+    if last_intent == "PAWNING":
+        if any(w in message_lower for w in ["rate", "interest", "redeem", "extend", "more", "detail", "due"]):
+            return handle_pawning_intent(message)
     if last_intent == "GENERAL":
         if any(w in message_lower for w in ["hour", "time", "open", "close", "contact", "branch", "atm"]):
             return handle_general_intent(message)
@@ -101,7 +109,7 @@ def format_transactions_response(transactions: list) -> str:
 # ── Intent handlers ───────────────────────────────────────────────────────────
 
 # Personal-data intents that require an account to be selected
-_ACCOUNT_REQUIRED_INTENTS = frozenset(["BALANCE", "TRANSACTIONS"])
+_ACCOUNT_REQUIRED_INTENTS = frozenset(["BALANCE", "TRANSACTIONS", "FIXED_DEPOSIT", "PAWNING"])
 
 
 def _require_account_selection() -> Dict[str, Any]:
@@ -606,6 +614,115 @@ def handle_general_intent(message: str = "") -> Dict[str, Any]:
     return {"reply": reply, "intent": "GENERAL", "confidence": 0.9}
 
 
+def handle_fixed_deposit_intent(message: str = "", user_id: int = 1) -> Dict[str, Any]:
+    """Handle FIXED_DEPOSIT intent — show user's FDs or general FD information."""
+    message_lower = message.lower()
+
+    # Sub-topic: general rates / how-to (no personal data needed)
+    if any(w in message_lower for w in [
+        "what is", "how does", "how do", "rate", "interest", "how to open",
+        "minimum", "plan", "offer", "available", "tenure", "term", "options"
+    ]):
+        reply = (
+            "We offer competitive Fixed Deposit (FD) plans to grow your savings:\n\n"
+            "• 6-month FD:  4.50% per annum\n"
+            "• 12-month FD: 5.00% per annum\n"
+            "• 24-month FD: 5.50% per annum\n"
+            "• 36-month FD: 6.00% per annum\n\n"
+            "Minimum deposit: $1,000 | Interest is paid at maturity.\n"
+            "Auto-renewal is available — your FD can roll over automatically.\n"
+            "Early withdrawal is permitted with a reduced interest rate.\n\n"
+            "Would you like to open an FD or see your existing deposits?"
+        )
+        return {"reply": reply, "intent": "FIXED_DEPOSIT", "confidence": 0.9}
+
+    # Sub-topic: my FD / personal data
+    deposits = get_user_fixed_deposits(user_id)
+    if not deposits:
+        reply = (
+            "You don't currently have any Fixed Deposit accounts.\n\n"
+            "Our FD plans offer rates from 4.50% to 6.00% p.a. "
+            "Would you like to know how to open one?"
+        )
+        return {"reply": reply, "intent": "FIXED_DEPOSIT", "confidence": 0.9}
+
+    lines = ["Here are your Fixed Deposit account(s):\n"]
+    for fd in deposits:
+        start = fd['start_date'].strftime('%Y-%m-%d') if hasattr(fd['start_date'], 'strftime') else str(fd['start_date'])
+        maturity = fd['maturity_date'].strftime('%Y-%m-%d') if hasattr(fd['maturity_date'], 'strftime') else str(fd['maturity_date'])
+        renew = "Yes" if fd['auto_renew'] else "No"
+        status = fd['status'].upper()
+        lines.append(
+            f"📋 FD Number: {fd['fd_number']}\n"
+            f"   Principal:      ${fd['principal']:,.2f}\n"
+            f"   Interest Rate:  {fd['interest_rate']}% p.a.\n"
+            f"   Term:           {fd['term_months']} months\n"
+            f"   Maturity Amount: ${fd['maturity_amount']:,.2f}\n"
+            f"   Start Date:     {start}\n"
+            f"   Maturity Date:  {maturity}\n"
+            f"   Auto-Renew:     {renew}\n"
+            f"   Status:         {status}\n"
+        )
+    lines.append("Is there anything else I can help you with?")
+    return {"reply": "\n".join(lines), "intent": "FIXED_DEPOSIT", "confidence": 0.9}
+
+
+def handle_pawning_intent(message: str = "", user_id: int = 1) -> Dict[str, Any]:
+    """Handle PAWNING intent — show user's pawn tickets or general pawning information."""
+    message_lower = message.lower()
+
+    # Sub-topic: general info (no personal data needed)
+    if any(w in message_lower for w in [
+        "what is", "how does", "how do", "how to", "eligib", "item", "accept",
+        "rate", "interest", "plan", "offer", "available", "service", "work"
+    ]):
+        reply = (
+            "Our Pawning Service lets you obtain a quick loan against your valuables:\n\n"
+            "📦 Accepted items:\n"
+            "   • Gold & Jewelry  — up to 75% of appraised value\n"
+            "   • Electronics     — up to 60% of appraised value\n"
+            "   • Vehicles        — up to 70% of appraised value\n"
+            "   • Silver & Others — assessed case by case\n\n"
+            "💰 Interest Rates (monthly):\n"
+            "   • Gold / Jewelry: 2.50% per month\n"
+            "   • Electronics:    3.00% per month\n"
+            "   • Vehicles:       2.00% per month\n\n"
+            "📅 Standard loan period: 3 months (extendable)\n"
+            "🔑 To redeem: repay the outstanding amount + interest at any branch.\n\n"
+            "Would you like to check your existing pawn tickets?"
+        )
+        return {"reply": reply, "intent": "PAWNING", "confidence": 0.9}
+
+    # Sub-topic: my pawn tickets / personal data
+    tickets = get_user_pawning(user_id)
+    if not tickets:
+        reply = (
+            "You don't currently have any active pawn tickets.\n\n"
+            "Our pawning service accepts gold, jewelry, electronics, and vehicles. "
+            "Visit any branch to get started. Is there anything else I can help you with?"
+        )
+        return {"reply": reply, "intent": "PAWNING", "confidence": 0.9}
+
+    lines = ["Here are your pawn ticket(s):\n"]
+    for ticket in tickets:
+        pledged = ticket['pledged_at'].strftime('%Y-%m-%d') if hasattr(ticket['pledged_at'], 'strftime') else str(ticket['pledged_at'])
+        due = ticket['due_date'].strftime('%Y-%m-%d') if hasattr(ticket['due_date'], 'strftime') else str(ticket['due_date'])
+        status = ticket['status'].upper()
+        lines.append(
+            f"🏷️ Ticket: {ticket['ticket_number']}\n"
+            f"   Item:            {ticket['item_description']} ({ticket['item_category'].title()})\n"
+            f"   Appraised Value: ${ticket['appraised_value']:,.2f}\n"
+            f"   Loan Amount:     ${ticket['loan_amount']:,.2f}\n"
+            f"   Outstanding:     ${ticket['outstanding']:,.2f}\n"
+            f"   Interest Rate:   {ticket['interest_rate']}% per month\n"
+            f"   Pledged On:      {pledged}\n"
+            f"   Due Date:        {due}\n"
+            f"   Status:          {status}\n"
+        )
+    lines.append("To redeem, visit any branch with your ticket. Is there anything else I can help you with?")
+    return {"reply": "\n".join(lines), "intent": "PAWNING", "confidence": 0.9}
+
+
 def handle_unknown_intent(user_message: str) -> Dict[str, Any]:
     """
     Handle UNKNOWN intent — save question and return help message.
@@ -696,6 +813,18 @@ def process_chat_message(
 
         elif intent == 'GENERAL':
             response = handle_general_intent(message)
+
+        elif intent == 'FIXED_DEPOSIT':
+            if not account_number:
+                response = _require_account_selection()
+            else:
+                response = handle_fixed_deposit_intent(message, user_id)
+
+        elif intent == 'PAWNING':
+            if not account_number:
+                response = _require_account_selection()
+            else:
+                response = handle_pawning_intent(message, user_id)
 
         else:  # UNKNOWN — try context-aware fallback first
             context_response = _try_context_fallback(message, last_intent or "")

@@ -104,7 +104,7 @@ export function ChatContainer({
   };
 
   return (
-    <div className="flex flex-col w-full h-[700px] max-h-[92vh] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="flex flex-col w-full h-dvh sm:h-[650px] lg:h-[800px] sm:max-h-[92vh] bg-white sm:rounded-3xl sm:shadow-2xl sm:border  overflow-hidden">
       <Header
         isOnline={isOnline}
         accountInfo={accountInfo}

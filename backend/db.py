@@ -233,6 +233,53 @@ def get_all_unknown_questions() -> List[Dict[str, Any]]:
     return result if result else []
 
 
+# ============= Fixed Deposit Queries =============
+
+def get_user_fixed_deposits(user_id: int) -> List[Dict[str, Any]]:
+    """
+    Fetch all fixed deposits for a user.
+
+    Args:
+        user_id: User ID
+
+    Returns:
+        List of fixed deposit dictionaries
+    """
+    query = """
+        SELECT fd_number, principal, interest_rate, term_months,
+               maturity_amount, start_date, maturity_date, auto_renew, status
+        FROM fixed_deposits
+        WHERE user_id = %s
+        ORDER BY start_date DESC
+    """
+    result = execute_query(query, (user_id,), fetch_all=True)
+    return result if result else []
+
+
+# ============= Pawning Queries =============
+
+def get_user_pawning(user_id: int) -> List[Dict[str, Any]]:
+    """
+    Fetch all active/pending pawn tickets for a user.
+
+    Args:
+        user_id: User ID
+
+    Returns:
+        List of pawning dictionaries
+    """
+    query = """
+        SELECT ticket_number, item_description, item_category,
+               appraised_value, loan_amount, interest_rate,
+               pledged_at, due_date, outstanding, status
+        FROM pawning
+        WHERE user_id = %s
+        ORDER BY pledged_at DESC
+    """
+    result = execute_query(query, (user_id,), fetch_all=True)
+    return result if result else []
+
+
 # ============= Database Health Check =============
 
 def test_connection() -> bool:
