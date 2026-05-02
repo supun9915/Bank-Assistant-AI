@@ -91,7 +91,7 @@ def format_transactions_response(transactions: list) -> str:
     if not transactions:
         return "No recent transactions found."
 
-    response = "Here are your recent transactions:\n\n"
+    response = "📊 Here are your recent transactions:\n\n"
 
     for idx, txn in enumerate(transactions, 1):
         amount = txn['amount']
@@ -99,7 +99,7 @@ def format_transactions_response(transactions: list) -> str:
         date = txn['date'].strftime('%Y-%m-%d') if hasattr(txn['date'], 'strftime') else str(txn['date'])
         description = txn.get('description', 'N/A')
 
-        amount_str = f"+${amount:,.2f}" if txn_type == 'credit' else f"-${amount:,.2f}"
+        amount_str = f"🟢 +${amount:,.2f}" if txn_type == 'credit' else f"🔴 -${amount:,.2f}"
 
         response += f"{idx}. {amount_str} ({txn_type.upper()}) - {date}\n"
         response += f"   {description}\n\n"
@@ -133,11 +133,11 @@ def handle_greeting_intent() -> Dict[str, Any]:
     """Handle GREETING intent"""
     import random
     replies = [
-        "Hello! How can I help you with your banking today?",
-        "Hi there! What can I do for you today?",
-        "Hey! How can I assist you with your banking needs?",
-        "Good day! How can I help you today?",
-        "Hello! Feel free to ask me about your account, loans, transfers, or any other banking service.",
+        "👋 Hello! How can I help you with your banking today?",
+        "👋 Hi there! What can I do for you today?",
+        "Hey! 😊 How can I assist you with your banking needs?",
+        "🏦 Good day! How can I help you today?",
+        "👋 Hello! Feel free to ask me about your account, loans, transfers, or any other banking service. 😊",
     ]
     return {
         "reply": random.choice(replies),
@@ -185,14 +185,14 @@ def handle_balance_intent(user_id: int = 1) -> Dict[str, Any]:
     if balance is not None:
         formatted_balance = format_balance_response(balance)
         return {
-            "reply": f"Your current account balance is {formatted_balance}. Is there anything else I can help you with?",
+            "reply": f"💰 Your current account balance is **{formatted_balance}**. Is there anything else I can help you with?",
             "intent": "BALANCE",
             "confidence": 0.9,
             "data": {"balance": balance}
         }
     else:
         return {
-            "reply": "I'm sorry, I wasn't able to retrieve your balance at the moment. Please try again shortly, or call us at 1-800-BANKING for immediate assistance.",
+            "reply": "❌ I'm sorry, I wasn't able to retrieve your balance at the moment. Please try again shortly, or call us at 1-800-BANKING for immediate assistance.",
             "intent": "BALANCE",
             "confidence": 0.9,
             "data": None
@@ -213,7 +213,7 @@ def handle_transactions_intent(user_id: int = 1, limit: int = 5) -> Dict[str, An
         }
     else:
         return {
-            "reply": "It looks like you don't have any recent transactions. Is there anything else I can help you with?",
+            "reply": "📭 It looks like you don't have any recent transactions yet. Is there anything else I can help you with?",
             "intent": "TRANSACTIONS",
             "confidence": 0.9,
             "data": {"transactions": []}
@@ -248,21 +248,21 @@ def handle_loan_intent(message: str = "") -> Dict[str, Any]:
 
     if any(w in message_lower for w in ["lowest", "cheapest", "minimum", "best rate", "low interest", "minimum rate", "lowest rate", "best interest"]):
         reply = (
-            "Great question! Among all our loan options, the Home Loan offers the lowest interest rate:\n\n"
-            "• Home Loans: 6% – 9% per annum (lowest available)\n"
-            "• Car Loans: 7% – 11% per annum\n"
-            "• Personal Loans: 8% – 12% per annum\n\n"
+            "🏆 Great question! Among all our loan options, the Home Loan offers the lowest interest rate:\n\n"
+            "🏠 Home Loans: 6% – 9% per annum *(lowest available)*\n"
+            "🚗 Car Loans: 7% – 11% per annum\n"
+            "💳 Personal Loans: 8% – 12% per annum\n\n"
             "Home loans offer competitive rates as they are secured by the property. "
             "Would you like more details about eligibility or repayment terms?"
         )
     else:
         reply = (
-            "We offer a range of loan options to suit your needs:\n\n"
-            "• Personal Loans: 8% – 12% interest rate per annum\n"
-            "• Home Loans: 6% – 9% interest rate per annum\n"
-            "• Car Loans: 7% – 11% interest rate per annum\n\n"
+            "🏦 We offer a range of loan options to suit your needs:\n\n"
+            "💳 Personal Loans: 8% – 12% interest rate per annum\n"
+            "🏠 Home Loans: 6% – 9% interest rate per annum\n"
+            "🚗 Car Loans: 7% – 11% interest rate per annum\n\n"
             "Each loan has different eligibility criteria and repayment terms. "
-            "Is there a specific loan type you'd like to know more about?"
+            "💡 Is there a specific loan type you'd like to know more about?"
         )
 
     return {"reply": reply, "intent": "LOAN", "confidence": 0.9}
@@ -274,26 +274,26 @@ def handle_action_request(message: str = "") -> Dict[str, Any]:
 
     if any(w in message_lower for w in ["loan", "borrow", "mortgage", "financing"]):
         reply = (
-            "Thank you for your interest in our loan services!\n\n"
+            "🏦 Thank you for your interest in our loan services!\n\n"
             "I'm an AI assistant and can provide you with information, "
             "but to actually apply for a loan you'll need to speak with one of our loan specialists.\n\n"
             "Here's how to get started:\n"
-            "• Visit your nearest branch with a valid ID and proof of income\n"
-            "• Call us at 1-800-BANKING to schedule an appointment\n"
-            "• Email us at support@smartbank.com\n\n"
+            "🏢 Visit your nearest branch with a valid ID and proof of income\n"
+            "📞 Call us at 1-800-BANKING to schedule an appointment\n"
+            "📧 Email us at support@smartbank.com\n\n"
             "Our team will be happy to guide you through the entire process. "
-            "In the meantime, would you like to know about our loan options or interest rates?"
+            "💡 In the meantime, would you like to know about our loan options or interest rates?"
         )
     else:
         reply = (
-            "Thank you for choosing Smart Bank!\n\n"
+            "🏦 Thank you for choosing Smart Bank!\n\n"
             "I'm an AI assistant and can provide guidance, "
             "but to actually open a new account you'll need to visit us in person.\n\n"
-            "Here's what to bring:\n"
-            "• A valid government-issued photo ID (Passport, NIC, or Driving License)\n"
-            "• Proof of address (utility bill or bank statement within the last 3 months)\n"
-            "• Your active mobile number and email address\n\n"
-            "Please visit any branch during working hours (Mon–Fri: 9AM–5PM, Sat: 9AM–1PM). "
+            "📋 Here's what to bring:\n"
+            "🪪 A valid government-issued photo ID (Passport, NIC, or Driving License)\n"
+            "📄 Proof of address (utility bill or bank statement within the last 3 months)\n"
+            "📱 Your active mobile number and email address\n\n"
+            "🕐 Please visit any branch during working hours (Mon–Fri: 9AM–5PM, Sat: 9AM–1PM). "
             "Our staff will be delighted to assist you! Is there anything else I can help you with?"
         )
 
@@ -331,65 +331,65 @@ def handle_account_services_intent(message: str = "", last_intent: str = "") -> 
 
     if subtopic == "requirements":
         reply = (
-            "To open a new account with Smart Bank, you'll need to bring the following:\n\n"
-            "• A valid government-issued photo ID (Passport, NIC, or Driving License)\n"
-            "• Proof of address (utility bill or bank statement — within the last 3 months)\n"
-            "• Your active mobile number\n"
-            "• Your email address\n\n"
-            "That's all! Our friendly staff at any branch will guide you through the rest. "
+            "📋 To open a new account with Smart Bank, you'll need to bring the following:\n\n"
+            "🪪 A valid government-issued photo ID (Passport, NIC, or Driving License)\n"
+            "📄 Proof of address (utility bill or bank statement — within the last 3 months)\n"
+            "📱 Your active mobile number\n"
+            "📧 Your email address\n\n"
+            "✅ That's all! Our friendly staff at any branch will guide you through the rest. "
             "Is there anything else I can help you with?"
         )
     elif subtopic == "open_account":
         reply = (
-            "Opening a new account with Smart Bank is easy!\n\n"
-            "• Visit any of our branches with a valid ID and proof of address\n"
-            "• Our staff will assist you through the account opening process\n"
-            "• It typically takes about 15–20 minutes\n\n"
-            "Would you like to know what specific documents you need to bring?"
+            "🏦 Opening a new account with Smart Bank is easy!\n\n"
+            "🏢 Visit any of our branches with a valid ID and proof of address\n"
+            "👨‍💼 Our staff will assist you through the account opening process\n"
+            "⏱️ It typically takes about 15–20 minutes\n\n"
+            "💡 Would you like to know what specific documents you need to bring?"
         )
     elif subtopic == "close_account":
         reply = (
-            "We're sorry to hear you'd like to close your account. If you do need to proceed:\n\n"
-            "• Visit any branch in person with your valid ID\n"
-            "• Or call us at 1-800-BANKING for further assistance\n\n"
-            "Please ensure there are no pending transactions before closure. "
+            "😢 We're sorry to hear you'd like to close your account. If you do need to proceed:\n\n"
+            "🏢 Visit any branch in person with your valid ID\n"
+            "📞 Or call us at 1-800-BANKING for further assistance\n\n"
+            "⚠️ Please ensure there are no pending transactions before closure. "
             "Is there anything else I can help you with?"
         )
     elif subtopic == "update":
         reply = (
-            "Updating your account details is quick and easy!\n\n"
-            "• Online Banking: Log in at www.smartbank.com > Settings > Profile\n"
-            "• Mobile App: Settings > Profile > Update Details\n"
-            "• Branch: Visit any branch with your valid ID\n\n"
-            "Some changes may require in-branch verification for your security. "
+            "✏️ Updating your account details is quick and easy!\n\n"
+            "💻 Online Banking: Log in at www.smartbank.com > Settings > Profile\n"
+            "📱 Mobile App: Settings > Profile > Update Details\n"
+            "🏢 Branch: Visit any branch with your valid ID\n\n"
+            "🔒 Some changes may require in-branch verification for your security. "
             "Is there anything else I can help you with?"
         )
     elif subtopic == "statement":
         reply = (
-            "Your account statements are available in multiple ways:\n\n"
-            "• Mobile App: Accounts > Statements\n"
-            "• Online Banking: Log in at www.smartbank.com > Statements\n"
-            "• Branch: Request a printed copy at any branch\n\n"
-            "Statements are available for up to 12 months. "
+            "📄 Your account statements are available in multiple ways:\n\n"
+            "📱 Mobile App: Accounts > Statements\n"
+            "💻 Online Banking: Log in at www.smartbank.com > Statements\n"
+            "🏢 Branch: Request a printed copy at any branch\n\n"
+            "🗓️ Statements are available for up to 12 months. "
             "Is there anything else I can help you with?"
         )
     elif subtopic == "activate":
         reply = (
-            "Activating your account is straightforward:\n\n"
-            "• Call our 24/7 helpline at 1-800-BANKING\n"
-            "• Or visit any branch with your valid ID\n\n"
-            "Activation is usually instant once your identity is verified. "
+            "✅ Activating your account is straightforward:\n\n"
+            "📞 Call our 24/7 helpline at 1-800-BANKING\n"
+            "🏢 Or visit any branch with your valid ID\n\n"
+            "⚡ Activation is usually instant once your identity is verified. "
             "Is there anything else I can help you with?"
         )
     else:
         reply = (
-            "Here's an overview of our account services:\n\n"
-            "• Open Account: Visit any branch with a valid ID and proof of address\n"
-            "• Close Account: Visit a branch or call 1-800-BANKING\n"
-            "• Update Details: Log in to online banking or visit a branch\n"
-            "• Activate Account: Call 1-800-BANKING or visit any branch\n"
-            "• Account Statement: Available via mobile app, online banking, or branch\n\n"
-            "Is there a specific service you need help with? I'm happy to assist!"
+            "🏦 Here's an overview of our account services:\n\n"
+            "➕ Open Account: Visit any branch with a valid ID and proof of address\n"
+            "❌ Close Account: Visit a branch or call 1-800-BANKING\n"
+            "✏️ Update Details: Log in to online banking or visit a branch\n"
+            "✅ Activate Account: Call 1-800-BANKING or visit any branch\n"
+            "📄 Account Statement: Available via mobile app, online banking, or branch\n\n"
+            "Is there a specific service you need help with? I'm happy to assist! 😊"
         )
 
     return {"reply": reply, "intent": "ACCOUNT_SERVICES", "confidence": 0.9}
@@ -409,46 +409,46 @@ def handle_security_intent(message: str = "") -> Dict[str, Any]:
 
     if subtopic == "password":
         reply = (
-            "No worries, resetting your password is quick!\n\n"
-            "• Online/Mobile App: Click or tap 'Forgot Password' on the login screen and follow the steps\n"
-            "• Phone: Call 1-800-BANKING (available 24/7) for assistance\n\n"
-            "You'll need your registered mobile number to verify your identity. "
+            "🔐 No worries, resetting your password is quick!\n\n"
+            "💻📱 Online/Mobile App: Click or tap 'Forgot Password' on the login screen and follow the steps\n"
+            "📞 Phone: Call 1-800-BANKING (available 24/7) for assistance\n\n"
+            "📱 You'll need your registered mobile number to verify your identity. "
             "Is there anything else I can help you with?"
         )
     elif subtopic in ("lost_card", "block_card"):
         reply = (
-            "Please act quickly to protect your funds!\n\n"
-            "• Call 1-800-BANKING immediately (24/7 helpline) to block your card\n"
-            "• Or use the Mobile App: Cards > Block Card\n\n"
-            "Once blocked, a replacement card can be arranged at your nearest branch. "
+            "⚠️ Please act quickly to protect your funds!\n\n"
+            "📞 Call 1-800-BANKING immediately (24/7 helpline) to block your card\n"
+            "📱 Or use the Mobile App: Cards > Block Card\n\n"
+            "✅ Once blocked, a replacement card can be arranged at your nearest branch. "
             "Is there anything else I can help you with?"
         )
     elif subtopic == "fraud":
         reply = (
-            "Your account security is our top priority. Please act immediately:\n\n"
-            "• Call 1-800-FRAUD (our dedicated fraud helpline, available 24/7)\n"
-            "• Or call 1-800-BANKING to secure your account right away\n"
-            "• Visit your nearest branch if preferred\n\n"
-            "Please do not share any passwords or OTPs with anyone. "
+            "🆘 Your account security is our top priority. Please act immediately:\n\n"
+            "📞 Call 1-800-FRAUD (our dedicated fraud helpline, available 24/7)\n"
+            "📞 Or call 1-800-BANKING to secure your account right away\n"
+            "🏢 Visit your nearest branch if preferred\n\n"
+            "🚫 Please do NOT share any passwords or OTPs with anyone. "
             "Is there anything else I can assist you with?"
         )
     elif subtopic == "otp":
         reply = (
-            "Enabling Two-Factor Authentication (OTP) is a great way to secure your account!\n\n"
-            "• Mobile App: Settings > Security > Two-Factor Authentication\n"
-            "• Or call 1-800-BANKING for assistance\n\n"
-            "We strongly recommend enabling OTP for all transactions. "
+            "🔒 Enabling Two-Factor Authentication (OTP) is a great way to secure your account!\n\n"
+            "📱 Mobile App: Settings > Security > Two-Factor Authentication\n"
+            "📞 Or call 1-800-BANKING for assistance\n\n"
+            "🛡️ We strongly recommend enabling OTP for all transactions. "
             "Is there anything else I can help you with?"
         )
     else:
         reply = (
-            "Your security is very important to us! Here's how we can help:\n\n"
-            "• Forgot Password: Click 'Forgot Password' on the login page\n"
-            "• Lost/Stolen Card: Call 1-800-BANKING immediately (24/7)\n"
-            "• Block Card: Mobile App > Cards > Block Card, or call our helpline\n"
-            "• Report Fraud: Call 1-800-FRAUD (24/7)\n"
-            "• Enable OTP: Settings > Security in the mobile app\n\n"
-            "For urgent matters, our 24/7 helpline is always available. "
+            "🛡️ Your security is very important to us! Here's how we can help:\n\n"
+            "🔐 Forgot Password: Click 'Forgot Password' on the login page\n"
+            "🚨 Lost/Stolen Card: Call 1-800-BANKING immediately (24/7)\n"
+            "🚫 Block Card: Mobile App > Cards > Block Card, or call our helpline\n"
+            "🆘 Report Fraud: Call 1-800-FRAUD (24/7)\n"
+            "🔒 Enable OTP: Settings > Security in the mobile app\n\n"
+            "📞 For urgent matters, our 24/7 helpline is always available. "
             "Is there a specific issue I can help you with?"
         )
 
@@ -461,24 +461,24 @@ def handle_foreign_exchange_intent(message: str = "") -> Dict[str, Any]:
 
     if any(w in message_lower for w in ["buy", "purchase", "sell", "exchange", "convert", "how to"]):
         reply = (
-            "Smart Bank offers convenient foreign currency exchange services!\n\n"
-            "**How to exchange currency:**\n"
-            "• Visit any branch during working hours\n"
-            "• Present your valid ID\n"
-            "• State the currency and amount you need\n"
-            "• Exchange rates are applied at the time of transaction\n\n"
-            "**Available Currencies:** USD, EUR, GBP, AUD, CAD, JPY, and more\n\n"
-            "For large amounts, we recommend calling ahead to confirm availability: **1-800-BANKING**\n\n"
+            "💱 Smart Bank offers convenient foreign currency exchange services!\n\n"
+            "🌍 **How to exchange currency:**\n"
+            "🏢 Visit any branch during working hours\n"
+            "🪪 Present your valid ID\n"
+            "💬 State the currency and amount you need\n"
+            "📈 Exchange rates are applied at the time of transaction\n\n"
+            "💵 **Available Currencies:** USD, EUR, GBP, AUD, CAD, JPY, and more\n\n"
+            "📞 For large amounts, we recommend calling ahead to confirm availability: **1-800-BANKING**\n\n"
             "Is there anything else I can help you with?"
         )
     else:
         reply = (
-            "Here are our indicative foreign exchange rates (rates updated daily):\n\n"
-            "• USD (US Dollar):     Buy 299.50 / Sell 305.00\n"
-            "• EUR (Euro):          Buy 325.00 / Sell 332.00\n"
-            "• GBP (British Pound): Buy 380.00 / Sell 388.00\n"
-            "• AUD (Australian Dollar): Buy 195.00 / Sell 200.00\n"
-            "• JPY (Japanese Yen):  Buy 2.00 / Sell 2.10\n\n"
+            "💱 Here are our indicative foreign exchange rates *(updated daily)*:\n\n"
+            "🇺🇸 USD (US Dollar):         Buy 299.50 / Sell 305.00\n"
+            "🇪🇺 EUR (Euro):              Buy 325.00 / Sell 332.00\n"
+            "🇬🇧 GBP (British Pound):     Buy 380.00 / Sell 388.00\n"
+            "🇦🇺 AUD (Australian Dollar): Buy 195.00 / Sell 200.00\n"
+            "🇯🇵 JPY (Japanese Yen):      Buy 2.00   / Sell 2.10\n\n"
             "ℹ️ Rates are indicative and subject to change. Please visit any branch or call "
             "**1-800-BANKING** for the latest rates.\n\n"
             "Would you like to know how to exchange currency?"
@@ -490,14 +490,14 @@ def handle_foreign_exchange_intent(message: str = "") -> Dict[str, Any]:
 def handle_forgot_email_intent() -> Dict[str, Any]:
     """Handle FORGOT_EMAIL intent — user forgot their email or wants to change it"""
     reply = (
-        "No problem! Here's how you can recover or update your registered email address:\n\n"
-        "**Option 1 — Via Mobile App** *(if you can still log in)*\n"
+        "📧 No problem! Here's how you can recover or update your registered email address:\n\n"
+        "📱 **Option 1 — Via Mobile App** *(if you can still log in)*\n"
         "• Go to **Settings > Profile > Edit Email**\n"
         "• Verify with the OTP sent to your registered phone number\n\n"
-        "**Option 2 — Visit a Branch**\n"
+        "🏢 **Option 2 — Visit a Branch**\n"
         "• Bring a valid government-issued ID (Passport, NIC, or Driving License)\n"
         "• Our staff will verify your identity and update your email securely\n\n"
-        "**Option 3 — Call Our Helpline**\n"
+        "📞 **Option 3 — Call Our Helpline**\n"
         "• Call **1-800-BANKING** (available 24/7)\n"
         "• Have your account number and ID details ready\n\n"
         "⚠️ For your security, email changes require identity verification.\n\n"
@@ -511,20 +511,20 @@ def handle_profanity_intent() -> Dict[str, Any]:
     import random
     replies = [
         (
-            "I understand you're frustrated, and I'm truly sorry for the inconvenience. "
+            "💙 I understand you're frustrated, and I'm truly sorry for the inconvenience. "
             "I'm here to help you resolve this as quickly as possible.\n\n"
             "Could you please describe the issue you're experiencing so I can assist you better?"
         ),
         (
-            "I'm sorry to hear you're having a difficult experience. I genuinely want to help — "
+            "🙏 I'm sorry to hear you're having a difficult experience. I genuinely want to help — "
             "please let me know what's going wrong and I'll do my best to sort it out for you."
         ),
         (
-            "I can see this is causing you frustration, and I apologize for that. "
+            "💙 I can see this is causing you frustration, and I apologize for that. "
             "Let's work through this together.\n\nWhat exactly is the problem you're experiencing?"
         ),
         (
-            "Your feelings are valid, and I'm sorry things aren't going smoothly. "
+            "🙏 Your feelings are valid, and I'm sorry things aren't going smoothly. "
             "I'm here to help — please share the details of your issue and "
             "I'll get it resolved for you right away."
         ),
@@ -590,29 +590,29 @@ def handle_transfers_intent(message: str = "") -> Dict[str, Any]:
 
     if subtopic == "international":
         reply = (
-            "For international transfers, here's what you need to know:\n\n"
-            "• Visit any branch with the beneficiary's full bank details (SWIFT code / IBAN)\n"
-            "• Processing time: 3–5 business days\n"
-            "• Fee: $25 per international transaction\n\n"
-            "Please have the recipient's bank name, account number, SWIFT code, and country ready. "
+            "🌍 For international transfers, here's what you need to know:\n\n"
+            "🏢 Visit any branch with the beneficiary's full bank details (SWIFT code / IBAN)\n"
+            "⏱️ Processing time: 3–5 business days\n"
+            "💵 Fee: $25 per international transaction\n\n"
+            "📋 Please have the recipient's bank name, account number, SWIFT code, and country ready. "
             "Is there anything else I can help you with?"
         )
     elif subtopic == "bill_payment":
         reply = (
-            "Paying your bills with Smart Bank is very convenient!\n\n"
-            "• Online Banking: Log in > Bill Pay > Select your biller\n"
-            "• Mobile App: Payments > Bill Pay\n\n"
-            "Most bill payments are processed on the same business day. "
+            "💳 Paying your bills with Smart Bank is very convenient!\n\n"
+            "💻 Online Banking: Log in > Bill Pay > Select your biller\n"
+            "📱 Mobile App: Payments > Bill Pay\n\n"
+            "⚡ Most bill payments are processed on the same business day. "
             "Is there anything else I can help you with?"
         )
     else:
         reply = (
-            "Transferring money is simple with Smart Bank!\n\n"
-            "• Online Banking: Log in > Transfers > New Transfer\n"
-            "• Mobile App: Payments > Transfer Money\n"
-            "• Domestic transfers: processed same business day\n"
-            "• International transfers: 3–5 business days ($25 fee applies)\n\n"
-            "Transfer limits may apply. For more details, call 1-800-BANKING. "
+            "💸 Transferring money is simple with Smart Bank!\n\n"
+            "💻 Online Banking: Log in > Transfers > New Transfer\n"
+            "📱 Mobile App: Payments > Transfer Money\n"
+            "🏠 Domestic transfers: processed same business day\n"
+            "🌍 International transfers: 3–5 business days ($25 fee applies)\n\n"
+            "ℹ️ Transfer limits may apply. For more details, call 1-800-BANKING. "
             "Is there anything else I can help you with?"
         )
 
@@ -633,52 +633,52 @@ def handle_fees_intent(message: str = "") -> Dict[str, Any]:
 
     if subtopic == "atm":
         reply = (
-            "Here are the withdrawal and transaction limits:\n\n"
-            "• Daily ATM Withdrawal Limit: $1,000\n"
-            "• Daily Transaction Limit: $5,000\n\n"
-            "If you need a higher limit, please visit your nearest branch or call 1-800-BANKING. "
+            "🏧 Here are the withdrawal and transaction limits:\n\n"
+            "💵 Daily ATM Withdrawal Limit: $1,000\n"
+            "💳 Daily Transaction Limit: $5,000\n\n"
+            "ℹ️ If you need a higher limit, please visit your nearest branch or call 1-800-BANKING. "
             "Is there anything else I can help you with?"
         )
     elif subtopic == "maintenance":
         reply = (
-            "Here are our account maintenance details:\n\n"
-            "• Minimum Balance (Savings Account): $100\n"
-            "• Minimum Balance (Checking Account): $500\n"
-            "• Monthly Maintenance Fee: $5 (waived if balance exceeds $500)\n\n"
+            "📊 Here are our account maintenance details:\n\n"
+            "💰 Minimum Balance (Savings Account): $100\n"
+            "💰 Minimum Balance (Checking Account): $500\n"
+            "💵 Monthly Maintenance Fee: $5 *(waived if balance exceeds $500)*\n\n"
             "Is there anything else I can help you with?"
         )
     elif subtopic == "overdraft":
         reply = (
-            "Our overdraft fee is $35 per occurrence.\n\n"
-            "We recommend setting up low-balance alerts to help avoid overdrafts. "
-            "You can enable these through the mobile app or online banking. "
+            "⚠️ Our overdraft fee is $35 per occurrence.\n\n"
+            "💡 We recommend setting up low-balance alerts to help avoid overdrafts. "
+            "You can enable these through the 📱 mobile app or 💻 online banking. "
             "Is there anything else I can help you with?"
         )
     elif subtopic == "interest_rate":
         reply = (
-            "Our current savings account interest rate is:\n\n"
-            "• Savings Account: 2.5% per annum\n\n"
-            "Interest is calculated daily and credited to your account monthly. "
+            "💹 Our current savings account interest rate is:\n\n"
+            "🏦 Savings Account: 2.5% per annum\n\n"
+            "📅 Interest is calculated daily and credited to your account monthly. "
             "Is there anything else I can help you with?"
         )
     elif subtopic == "transfer_fee":
         reply = (
-            "Here are our transfer fees:\n\n"
-            "• Domestic Transfers: Free\n"
-            "• International Transfers: $25 per transaction\n\n"
+            "💸 Here are our transfer fees:\n\n"
+            "🏠 Domestic Transfers: ✅ Free\n"
+            "🌍 International Transfers: $25 per transaction\n\n"
             "Is there anything else I can help you with?"
         )
     else:
         reply = (
-            "Here's an overview of our fees and limits:\n\n"
-            "• Daily ATM Withdrawal Limit: $1,000\n"
-            "• Daily Transaction Limit: $5,000\n"
-            "• Minimum Balance (Savings): $100\n"
-            "• Minimum Balance (Checking): $500\n"
-            "• Monthly Maintenance Fee: $5 (waived if balance > $500)\n"
-            "• Overdraft Fee: $35 per occurrence\n"
-            "• International Transfer Fee: $25 per transaction\n"
-            "• Savings Interest Rate: 2.5% per annum\n\n"
+            "📊 Here's an overview of our fees and limits:\n\n"
+            "🏧 Daily ATM Withdrawal Limit: $1,000\n"
+            "💳 Daily Transaction Limit: $5,000\n"
+            "💰 Minimum Balance (Savings): $100\n"
+            "💰 Minimum Balance (Checking): $500\n"
+            "💵 Monthly Maintenance Fee: $5 *(waived if balance > $500)*\n"
+            "⚠️ Overdraft Fee: $35 per occurrence\n"
+            "🌍 International Transfer Fee: $25 per transaction\n"
+            "💹 Savings Interest Rate: 2.5% per annum\n\n"
             "Is there a specific fee you'd like to know more about?"
         )
 
@@ -697,39 +697,39 @@ def handle_digital_banking_intent(message: str = "") -> Dict[str, Any]:
 
     if subtopic == "download":
         reply = (
-            "Downloading our mobile app is very easy!\n\n"
-            "• iOS: Search 'Smart Bank' on the App Store\n"
-            "• Android: Search 'Smart Bank' on Google Play\n\n"
-            "The app is completely free. Once installed, register using your account number "
+            "📲 Downloading our mobile app is very easy!\n\n"
+            "🍎 iOS: Search 'Smart Bank' on the App Store\n"
+            "🤖 Android: Search 'Smart Bank' on Google Play\n\n"
+            "✅ The app is completely free. Once installed, register using your account number "
             "and mobile number to get started. Is there anything else I can help you with?"
         )
     elif subtopic == "register":
         reply = (
-            "Registering for digital banking is quick and simple!\n\n"
+            "📱 Registering for digital banking is quick and simple!\n\n"
             "You'll need:\n"
-            "• Your account number\n"
-            "• Your registered mobile number\n\n"
-            "• Internet Banking: Visit www.smartbank.com/online and click 'Register'\n"
-            "• Mobile App: Download 'Smart Bank', tap 'Register', and follow the steps\n\n"
-            "Registration takes just a few minutes! Is there anything else I can help you with?"
+            "🔢 Your account number\n"
+            "📞 Your registered mobile number\n\n"
+            "💻 Internet Banking: Visit www.smartbank.com/online and click 'Register'\n"
+            "📱 Mobile App: Download 'Smart Bank', tap 'Register', and follow the steps\n\n"
+            "⚡ Registration takes just a few minutes! Is there anything else I can help you with?"
         )
     elif subtopic == "login_issue":
         reply = (
-            "I'm sorry you're having trouble accessing your account. Here's how to resolve it:\n\n"
-            "• Forgot Password: Click 'Forgot Password' on the login screen\n"
-            "• Locked Account: Call 1-800-BANKING (24/7) to unlock\n"
-            "• Other Issues: Email support@smartbank.com or call 1-800-BANKING\n\n"
-            "Our support team is available 24/7 and will be happy to help you. "
+            "😟 I'm sorry you're having trouble accessing your account. Here's how to resolve it:\n\n"
+            "🔐 Forgot Password: Click 'Forgot Password' on the login screen\n"
+            "🔓 Locked Account: Call 1-800-BANKING (24/7) to unlock\n"
+            "📧 Other Issues: Email support@smartbank.com or call 1-800-BANKING\n\n"
+            "🕐 Our support team is available 24/7 and will be happy to help you. "
             "Is there anything else I can assist you with?"
         )
     else:
         reply = (
-            "Our digital banking services make managing your finances easy!\n\n"
-            "• Mobile App: Download 'Smart Bank' from the App Store or Google Play\n"
-            "• Internet Banking: Register at www.smartbank.com/online\n"
-            "• Available Features: Balance check, transfers, bill pay, statements, card controls\n\n"
+            "📱 Our digital banking services make managing your finances easy!\n\n"
+            "📲 Mobile App: Download 'Smart Bank' from the App Store or Google Play\n"
+            "💻 Internet Banking: Register at www.smartbank.com/online\n"
+            "✨ Available Features: Balance check, transfers, bill pay, statements, card controls\n\n"
             "You'll need your account number and registered mobile number to register. "
-            "For technical support, call 1-800-BANKING or email support@smartbank.com. "
+            "📞 For technical support, call 1-800-BANKING or email support@smartbank.com. "
             "Is there anything else I can help you with?"
         )
 
@@ -759,35 +759,35 @@ def handle_general_intent(message: str = "") -> Dict[str, Any]:
 
     if subtopic == "working_hours":
         reply = (
-            "Thank you for asking! Our branch working hours are:\n\n"
-            "• Monday – Friday: 9:00 AM – 5:00 PM\n"
-            "• Saturday: 9:00 AM – 1:00 PM\n"
-            "• Sunday & Public Holidays: Closed\n\n"
-            "Our Customer Service helpline is available 24/7 at 1-800-BANKING, "
+            "🕐 Thank you for asking! Our branch working hours are:\n\n"
+            "📅 Monday – Friday: 9:00 AM – 5:00 PM\n"
+            "📅 Saturday: 9:00 AM – 1:00 PM\n"
+            "❌ Sunday & Public Holidays: Closed\n\n"
+            "📞 Our Customer Service helpline is available **24/7** at 1-800-BANKING, "
             "so you can always reach us! Is there anything else I can help you with?"
         )
     elif subtopic == "contact":
         reply = (
-            "I'd be happy to share our contact information!\n\n"
-            "• Phone: 1-800-BANKING (available 24/7)\n"
-            "• Email: support@smartbank.com\n\n"
-            "We're always here to assist you. Is there anything else you need?"
+            "📞 I'd be happy to share our contact information!\n\n"
+            "📞 Phone: 1-800-BANKING *(available 24/7)*\n"
+            "📧 Email: support@smartbank.com\n\n"
+            "💬 We're always here to assist you. Is there anything else you need?"
         )
     elif subtopic == "location":
         reply = (
-            "You can find your nearest branch or ATM using our locator:\n\n"
-            "• Branch & ATM Locator: www.smartbank.com/branches\n\n"
+            "📍 You can find your nearest branch or ATM using our locator:\n\n"
+            "🗺️ Branch & ATM Locator: www.smartbank.com/branches\n\n"
             "Simply enter your location to find the nearest option. "
             "Is there anything else I can help you with?"
         )
     else:
         reply = (
-            "Thank you for reaching out to Smart Banking!\n\n"
-            "• Working Hours: Mon–Fri 9AM–5PM, Sat 9AM–1PM\n"
-            "• Customer Service: 1-800-BANKING (24/7)\n"
-            "• Email: support@smartbank.com\n"
-            "• Branch/ATM Locator: www.smartbank.com/branches\n\n"
-            "How can I assist you today?"
+            "🏦 Thank you for reaching out to Smart Banking!\n\n"
+            "🕐 Working Hours: Mon–Fri 9AM–5PM, Sat 9AM–1PM\n"
+            "📞 Customer Service: 1-800-BANKING (24/7)\n"
+            "📧 Email: support@smartbank.com\n"
+            "📍 Branch/ATM Locator: www.smartbank.com/branches\n\n"
+            "😊 How can I assist you today?"
         )
 
     return {"reply": reply, "intent": "GENERAL", "confidence": 0.9}
@@ -803,15 +803,15 @@ def handle_fixed_deposit_intent(message: str = "", user_id: int = 1) -> Dict[str
         "minimum", "plan", "offer", "available", "tenure", "term", "options"
     ]):
         reply = (
-            "We offer competitive Fixed Deposit (FD) plans to grow your savings:\n\n"
-            "• 6-month FD:  4.50% per annum\n"
-            "• 12-month FD: 5.00% per annum\n"
-            "• 24-month FD: 5.50% per annum\n"
-            "• 36-month FD: 6.00% per annum\n\n"
-            "Minimum deposit: $1,000 | Interest is paid at maturity.\n"
-            "Auto-renewal is available — your FD can roll over automatically.\n"
-            "Early withdrawal is permitted with a reduced interest rate.\n\n"
-            "Would you like to open an FD or see your existing deposits?"
+            "💹 We offer competitive Fixed Deposit (FD) plans to grow your savings:\n\n"
+            "📅 6-month FD:  4.50% per annum\n"
+            "📅 12-month FD: 5.00% per annum\n"
+            "📅 24-month FD: 5.50% per annum\n"
+            "📅 36-month FD: 6.00% per annum\n\n"
+            "💰 Minimum deposit: $1,000 | Interest is paid at maturity.\n"
+            "🔄 Auto-renewal is available — your FD can roll over automatically.\n"
+            "⚠️ Early withdrawal is permitted with a reduced interest rate.\n\n"
+            "💡 Would you like to open an FD or see your existing deposits?"
         )
         return {"reply": reply, "intent": "FIXED_DEPOSIT", "confidence": 0.9}
 
@@ -819,9 +819,9 @@ def handle_fixed_deposit_intent(message: str = "", user_id: int = 1) -> Dict[str
     deposits = get_user_fixed_deposits(user_id)
     if not deposits:
         reply = (
-            "You don't currently have any Fixed Deposit accounts.\n\n"
-            "Our FD plans offer rates from 4.50% to 6.00% p.a. "
-            "Would you like to know how to open one?"
+            "📭 You don't currently have any Fixed Deposit accounts.\n\n"
+            "💹 Our FD plans offer rates from 4.50% to 6.00% p.a. "
+            "💡 Would you like to know how to open one?"
         )
         return {"reply": reply, "intent": "FIXED_DEPOSIT", "confidence": 0.9}
 
@@ -876,9 +876,9 @@ def handle_pawning_intent(message: str = "", user_id: int = 1) -> Dict[str, Any]
     tickets = get_user_pawning(user_id)
     if not tickets:
         reply = (
-            "You don't currently have any active pawn tickets.\n\n"
-            "Our pawning service accepts gold, jewelry, electronics, and vehicles. "
-            "Visit any branch to get started. Is there anything else I can help you with?"
+            "📭 You don't currently have any active pawn tickets.\n\n"
+            "💡 Our pawning service accepts gold, jewelry, electronics, and vehicles. "
+            "🏢 Visit any branch to get started. Is there anything else I can help you with?"
         )
         return {"reply": reply, "intent": "PAWNING", "confidence": 0.9}
 
