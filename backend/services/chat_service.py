@@ -4,6 +4,7 @@ Chat service - Core business logic for chat processing
 import re
 import logging
 from typing import Dict, Any, Optional
+from langdetect import detect as _lang_detect, LangDetectException
 from nlp import detect_intent
 from db import (
     get_account_balance,
@@ -145,6 +146,38 @@ def handle_greeting_intent() -> Dict[str, Any]:
     }
 
 
+def handle_goodbye_intent() -> Dict[str, Any]:
+    """Handle GOODBYE intent — farewell, thank you, end of chat"""
+    import random
+    replies = [
+        (
+            "Thank you for banking with us! It was a pleasure assisting you today. "
+            "Have a wonderful day, and feel free to come back anytime you need help! 😊"
+        ),
+        (
+            "You're very welcome! It was great helping you. "
+            "Take care and have a fantastic day! Goodbye! 👋"
+        ),
+        (
+            "Thank you for reaching out — glad I could help! "
+            "Wishing you a great day ahead. Don't hesitate to come back if you have any questions. 😊"
+        ),
+        (
+            "It was my pleasure assisting you! "
+            "Have a wonderful day and stay safe. Goodbye! 👋"
+        ),
+        (
+            "Thank you for using our Smart Banking Assistant! "
+            "Feel free to chat with us anytime. Have a great day! 😊"
+        ),
+    ]
+    return {
+        "reply": random.choice(replies),
+        "intent": "GOODBYE",
+        "confidence": 1.0
+    }
+
+
 def handle_balance_intent(user_id: int = 1) -> Dict[str, Any]:
     """Handle BALANCE intent"""
     balance = get_account_balance(user_id)
@@ -190,6 +223,28 @@ def handle_transactions_intent(user_id: int = 1, limit: int = 5) -> Dict[str, An
 def handle_loan_intent(message: str = "") -> Dict[str, Any]:
     """Handle LOAN intent with focused sub-topic responses"""
     message_lower = message.lower()
+
+    if any(w in message_lower for w in [
+        "required", "requirement", "document", "what do i need", "what is needed",
+        "criteria", "eligibility", "details needed", "needed to apply", "apply for",
+        "how to apply", "application process", "what are the required"
+    ]):
+        reply = (
+            "To apply for a loan at Smart Bank, you will need the following:\n\n"
+            "📋 **Required Documents:**\n"
+            "• Valid government-issued photo ID (Passport, NIC, or Driving License)\n"
+            "• Proof of address (utility bill or bank statement — within the last 3 months)\n"
+            "• Proof of income (recent pay slips, employment letter, or bank statements for 3–6 months)\n"
+            "• For business loans: business registration documents and financial statements\n\n"
+            "✅ **Basic Eligibility:**\n"
+            "• Minimum age: 18 years\n"
+            "• Must be a Smart Bank account holder\n"
+            "• Stable source of income\n"
+            "• Good credit history\n\n"
+            "📍 To apply, visit your nearest branch or call **1-800-BANKING** to schedule an appointment.\n\n"
+            "Would you like to know about our loan interest rates or types of loans available?"
+        )
+        return {"reply": reply, "intent": "LOAN", "confidence": 0.9}
 
     if any(w in message_lower for w in ["lowest", "cheapest", "minimum", "best rate", "low interest", "minimum rate", "lowest rate", "best interest"]):
         reply = (
@@ -398,6 +453,130 @@ def handle_security_intent(message: str = "") -> Dict[str, Any]:
         )
 
     return {"reply": reply, "intent": "SECURITY", "confidence": 0.9}
+
+
+def handle_foreign_exchange_intent(message: str = "") -> Dict[str, Any]:
+    """Handle FOREIGN_EXCHANGE intent"""
+    message_lower = message.lower()
+
+    if any(w in message_lower for w in ["buy", "purchase", "sell", "exchange", "convert", "how to"]):
+        reply = (
+            "Smart Bank offers convenient foreign currency exchange services!\n\n"
+            "**How to exchange currency:**\n"
+            "• Visit any branch during working hours\n"
+            "• Present your valid ID\n"
+            "• State the currency and amount you need\n"
+            "• Exchange rates are applied at the time of transaction\n\n"
+            "**Available Currencies:** USD, EUR, GBP, AUD, CAD, JPY, and more\n\n"
+            "For large amounts, we recommend calling ahead to confirm availability: **1-800-BANKING**\n\n"
+            "Is there anything else I can help you with?"
+        )
+    else:
+        reply = (
+            "Here are our indicative foreign exchange rates (rates updated daily):\n\n"
+            "• USD (US Dollar):     Buy 299.50 / Sell 305.00\n"
+            "• EUR (Euro):          Buy 325.00 / Sell 332.00\n"
+            "• GBP (British Pound): Buy 380.00 / Sell 388.00\n"
+            "• AUD (Australian Dollar): Buy 195.00 / Sell 200.00\n"
+            "• JPY (Japanese Yen):  Buy 2.00 / Sell 2.10\n\n"
+            "ℹ️ Rates are indicative and subject to change. Please visit any branch or call "
+            "**1-800-BANKING** for the latest rates.\n\n"
+            "Would you like to know how to exchange currency?"
+        )
+
+    return {"reply": reply, "intent": "FOREIGN_EXCHANGE", "confidence": 0.9}
+
+
+def handle_forgot_email_intent() -> Dict[str, Any]:
+    """Handle FORGOT_EMAIL intent — user forgot their email or wants to change it"""
+    reply = (
+        "No problem! Here's how you can recover or update your registered email address:\n\n"
+        "**Option 1 — Via Mobile App** *(if you can still log in)*\n"
+        "• Go to **Settings > Profile > Edit Email**\n"
+        "• Verify with the OTP sent to your registered phone number\n\n"
+        "**Option 2 — Visit a Branch**\n"
+        "• Bring a valid government-issued ID (Passport, NIC, or Driving License)\n"
+        "• Our staff will verify your identity and update your email securely\n\n"
+        "**Option 3 — Call Our Helpline**\n"
+        "• Call **1-800-BANKING** (available 24/7)\n"
+        "• Have your account number and ID details ready\n\n"
+        "⚠️ For your security, email changes require identity verification.\n\n"
+        "Is there anything else I can help you with?"
+    )
+    return {"reply": reply, "intent": "FORGOT_EMAIL", "confidence": 0.9}
+
+
+def handle_profanity_intent() -> Dict[str, Any]:
+    """Handle PROFANITY_RESPONSE intent — respond with empathy and de-escalation"""
+    import random
+    replies = [
+        (
+            "I understand you're frustrated, and I'm truly sorry for the inconvenience. "
+            "I'm here to help you resolve this as quickly as possible.\n\n"
+            "Could you please describe the issue you're experiencing so I can assist you better?"
+        ),
+        (
+            "I'm sorry to hear you're having a difficult experience. I genuinely want to help — "
+            "please let me know what's going wrong and I'll do my best to sort it out for you."
+        ),
+        (
+            "I can see this is causing you frustration, and I apologize for that. "
+            "Let's work through this together.\n\nWhat exactly is the problem you're experiencing?"
+        ),
+        (
+            "Your feelings are valid, and I'm sorry things aren't going smoothly. "
+            "I'm here to help — please share the details of your issue and "
+            "I'll get it resolved for you right away."
+        ),
+    ]
+    return {"reply": random.choice(replies), "intent": "PROFANITY_RESPONSE", "confidence": 1.0}
+
+
+def handle_capabilities_intent() -> Dict[str, Any]:
+    """Handle CAPABILITIES intent — tell the user everything the chatbot can help with"""
+    reply = (
+        "I'm the **Smart Banking Assistant** and I'm here to help you with a wide range of banking services!\n\n"
+        "Here's everything I can assist you with:\n\n"
+        "\U0001f4b0 **Account & Balance**\n"
+        "  • Check your account balance\n"
+        "  • View recent transactions\n"
+        "  • Account opening, closing, and management\n\n"
+        "\U0001f3e6 **Loans**\n"
+        "  • Loan types and interest rates\n"
+        "  • Loan application requirements\n"
+        "  • Eligibility criteria\n\n"
+        "\U0001f4b3 **Cards**\n"
+        "  • Credit and debit card services\n"
+        "  • Block or replace a lost/stolen card\n\n"
+        "\U0001f4e4 **Transfers & Payments**\n"
+        "  • Domestic and international transfers\n"
+        "  • Bill payments\n\n"
+        "\U0001f4c5 **Fixed Deposits**\n"
+        "  • FD rates and plans\n"
+        "  • View your existing FD accounts\n\n"
+        "\U0001f48e **Pawning**\n"
+        "  • Pawning service details and rates\n"
+        "  • View your pawn tickets\n\n"
+        "\U0001f310 **Foreign Exchange**\n"
+        "  • Currency exchange rates\n"
+        "  • How to exchange currency\n\n"
+        "\U0001f4f1 **Digital Banking**\n"
+        "  • Mobile app and internet banking help\n"
+        "  • Login issues and registration\n\n"
+        "\U0001f512 **Security**\n"
+        "  • Password reset and PIN issues\n"
+        "  • Fraud reporting and account security\n\n"
+        "\U0001f4b5 **Fees & Limits**\n"
+        "  • ATM limits and withdrawal fees\n"
+        "  • Account maintenance charges\n\n"
+        "\U0001f4e7 **Email & Profile**\n"
+        "  • Forgot or want to change your registered email\n\n"
+        "\U0001f4cd **General Info**\n"
+        "  • Branch working hours and locations\n"
+        "  • Contact numbers and support\n\n"
+        "Just type your question and I'll do my best to help! What would you like to know?"
+    )
+    return {"reply": reply, "intent": "CAPABILITIES", "confidence": 1.0}
 
 
 def handle_transfers_intent(message: str = "") -> Dict[str, Any]:
@@ -735,12 +914,14 @@ def handle_unknown_intent(user_message: str) -> Dict[str, Any]:
             "I'm sorry, I didn't quite understand that. Could you please rephrase your question?\n\n"
             "I can help you with:\n"
             "• Account balance and transactions\n"
-            "• Loan information and options\n"
-            "• Transfers and payments\n"
-            "• Account services\n"
-            "• Fees and limits\n"
-            "• Digital banking\n\n"
-            "Feel free to ask anything related to your banking needs!"
+            "• Loan information, rates, and requirements\n"
+            "• Fixed deposits and pawning services\n"
+            "• Transfers and bill payments\n"
+            "• Foreign exchange rates\n"
+            "• Account services and email updates\n"
+            "• Fees, limits, and digital banking\n"
+            "• Security — lost cards, fraud, password reset\n\n"
+            "💡 Type **'What can you do?'** to see a full list of available services."
         ),
         "intent": "UNKNOWN",
         "confidence": 0.0
@@ -770,6 +951,72 @@ def process_chat_message(
     try:
         logger.info(f"Processing message from user {user_id}: {message}")
 
+        # ── Language guard: English-only chatbot ─────────────────────────────
+        # Step 1: detect non-Latin scripts via Unicode ranges (catches Sinhala,
+        #         Arabic, CJK, Cyrillic, Devanagari, etc. reliably)
+        # Step 2: for Latin-script text, use langdetect (French, Spanish, etc.)
+        _NON_LATIN_RANGES = [
+            (0x0600, 0x06FF),   # Arabic
+            (0x0900, 0x097F),   # Devanagari (Hindi)
+            (0x0980, 0x09FF),   # Bengali
+            (0x0A00, 0x0A7F),   # Gurmukhi (Punjabi)
+            (0x0A80, 0x0AFF),   # Gujarati
+            (0x0B00, 0x0B7F),   # Oriya
+            (0x0B80, 0x0BFF),   # Tamil
+            (0x0C00, 0x0C7F),   # Telugu
+            (0x0C80, 0x0CFF),   # Kannada
+            (0x0D00, 0x0D7F),   # Malayalam
+            (0x0D80, 0x0DFF),   # Sinhala
+            (0x0E00, 0x0E7F),   # Thai
+            (0x0E80, 0x0EFF),   # Lao
+            (0x0F00, 0x0FFF),   # Tibetan
+            (0x1000, 0x109F),   # Myanmar
+            (0x10A0, 0x10FF),   # Georgian
+            (0x1100, 0x11FF),   # Hangul Jamo (Korean)
+            (0x3040, 0x309F),   # Hiragana (Japanese)
+            (0x30A0, 0x30FF),   # Katakana (Japanese)
+            (0x4E00, 0x9FFF),   # CJK Unified (Chinese/Japanese/Korean)
+            (0xAC00, 0xD7AF),   # Hangul Syllables (Korean)
+            (0x0400, 0x04FF),   # Cyrillic (Russian, etc.)
+            (0x0370, 0x03FF),   # Greek
+            (0x0590, 0x05FF),   # Hebrew
+            (0x0530, 0x058F),   # Armenian
+        ]
+        def _has_non_latin(text: str) -> bool:
+            for ch in text:
+                cp = ord(ch)
+                if any(lo <= cp <= hi for lo, hi in _NON_LATIN_RANGES):
+                    return True
+            return False
+
+        is_non_english = False
+        detected_lang = "en"
+
+        if _has_non_latin(message):
+            is_non_english = True
+            detected_lang = "non-latin"
+        elif len(message.split()) >= 3:
+            # Only run langdetect on phrases (3+ words) to avoid false positives
+            try:
+                detected_lang = _lang_detect(message)
+                if detected_lang not in ("en",):
+                    is_non_english = True
+            except LangDetectException:
+                pass  # ambiguous input — treat as English
+
+        if is_non_english:
+            return {
+                "reply": (
+                    "I'm sorry, I only support **English** at the moment.\n\n"
+                    "Please rephrase your question in English and I'll be happy to help you! 😊\n\n"
+                    "_(Example: \"What is my account balance?\")_"
+                ),
+                "intent": "UNSUPPORTED_LANGUAGE",
+                "confidence": 1.0,
+                "detected_language": detected_lang,
+            }
+        # ─────────────────────────────────────────────────────────────────────
+
         # Check for action request first (before NLP), e.g. "I want to open an account"
         if _is_action_request(message):
             return handle_action_request(message)
@@ -780,6 +1027,9 @@ def process_chat_message(
         # Route to appropriate handler based on intent
         if intent == 'GREETING':
             response = handle_greeting_intent()
+
+        elif intent == 'GOODBYE':
+            response = handle_goodbye_intent()
 
         elif intent == 'BALANCE':
             if not account_number:
@@ -815,16 +1065,45 @@ def process_chat_message(
             response = handle_general_intent(message)
 
         elif intent == 'FIXED_DEPOSIT':
-            if not account_number:
-                response = _require_account_selection()
-            else:
+            # General FD info queries don't require auth; personal data queries do
+            _FD_GENERAL_KEYWORDS = (
+                "what is", "how does", "how do", "rate", "interest", "how to open",
+                "how to apply", "minimum", "plan", "offer", "available", "tenure",
+                "term", "options", "about", "detail", "info", "tell me", "explain",
+                "benefit", "calculator", "compare", "vs", "difference", "open",
+            )
+            msg_lower_fd = message.lower()
+            is_general_fd = any(kw in msg_lower_fd for kw in _FD_GENERAL_KEYWORDS)
+            if is_general_fd or account_number:
                 response = handle_fixed_deposit_intent(message, user_id)
+            else:
+                response = _require_account_selection()
 
         elif intent == 'PAWNING':
-            if not account_number:
-                response = _require_account_selection()
-            else:
+            # General pawning info queries don't require auth; personal ticket queries do
+            _PAWNING_GENERAL_KEYWORDS = (
+                "what is", "how does", "how do", "rate", "interest", "how to",
+                "about", "service", "info", "tell me", "explain", "detail",
+                "item", "accept", "eligib", "work",
+            )
+            msg_lower_pawn = message.lower()
+            is_general_pawn = any(kw in msg_lower_pawn for kw in _PAWNING_GENERAL_KEYWORDS)
+            if is_general_pawn or account_number:
                 response = handle_pawning_intent(message, user_id)
+            else:
+                response = _require_account_selection()
+
+        elif intent == 'FOREIGN_EXCHANGE':
+            response = handle_foreign_exchange_intent(message)
+
+        elif intent == 'FORGOT_EMAIL':
+            response = handle_forgot_email_intent()
+
+        elif intent == 'PROFANITY_RESPONSE':
+            response = handle_profanity_intent()
+
+        elif intent == 'CAPABILITIES':
+            response = handle_capabilities_intent()
 
         else:  # UNKNOWN — try context-aware fallback first
             context_response = _try_context_fallback(message, last_intent or "")

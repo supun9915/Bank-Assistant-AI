@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { Send, Mic } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Send } from "lucide-react";
 
 interface ChatInputProps {
   onSend: (text: string) => void;
@@ -17,6 +17,12 @@ const QUICK_ACTIONS = [
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!disabled) {
+      inputRef.current?.focus();
+    }
+  }, [disabled]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

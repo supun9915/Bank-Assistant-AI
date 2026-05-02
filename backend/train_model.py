@@ -25,6 +25,7 @@ import logging
 import random
 import numpy as np
 from pathlib import Path
+from collections import Counter
 
 import nltk
 from nltk.stem import LancasterStemmer
@@ -111,23 +112,51 @@ def preprocess(data: dict) -> tuple[list, list, list]:
 
 def create_training_set(
     words: list, classes: list, documents: list
-) -> tuple[np.ndarray, np.ndarray]:
-    """Convert documents to one-hot bag-of-words features and label vectors."""
-    X, y = [], []
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Convert documents to BoW features and one-hot label vectors.
+    Returns stratified train/val splits: X_train, X_val, y_train, y_val.
+    """
+    from sklearn.model_selection import train_test_split
+
+    X, y_indices = [], []
 
     for stems, tag in documents:
         stems_set = set(stems)
         bow = [1.0 if w in stems_set else 0.0 for w in words]
-        label = [1.0 if c == tag else 0.0 for c in classes]
         X.append(bow)
-        y.append(label)
+        y_indices.append(classes.index(tag))
 
-    # Shuffle to avoid ordering bias during validation split
-    combined = list(zip(X, y))
-    random.shuffle(combined)
-    X, y = zip(*combined)
+    X_arr = np.array(X, dtype=np.float32)
+    y_arr = np.array(y_indices, dtype=np.int32)
 
-    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
+    # Stratified split: ensures every class appears in both train and val
+    X_train, X_val, y_train_idx, y_val_idx = train_test_split(
+        X_arr, y_arr, test_size=0.15, random_state=42, stratify=y_arr
+    )
+
+    # One-hot encode labels
+    def to_onehot(indices):
+        oh = np.zeros((len(indices), len(classes)), dtype=np.float32)
+        oh[np.arange(len(indices)), indices] = 1.0
+        return oh
+
+    return X_train, X_val, to_onehot(y_train_idx), to_onehot(y_val_idx), y_train_idx
+
+
+def compute_class_weights(y_train_indices: np.ndarray, num_classes: int) -> dict:
+    """Compute balanced class weights to handle unequal class frequencies."""
+    counts = Counter(y_train_indices.tolist())
+    total = len(y_train_indices)
+    weights = {
+        cls: total / (num_classes * max(count, 1))
+        for cls, count in counts.items()
+    }
+    # Ensure all classes are represented even if absent from training split
+    for cls in range(num_classes):
+        if cls not in weights:
+            weights[cls] = 1.0
+    return weights
 
 
 # ── Model builder ──────────────────────────────────────────────────────────────
@@ -157,19 +186,19 @@ def build_model(input_size: int, output_size: int):
                 256,
                 input_shape=(input_size,),
                 activation="relu",
-                kernel_regularizer=l2(1e-3),
+                kernel_regularizer=l2(5e-4),
                 name="hidden_1",
             ),
             BatchNormalization(name="bn_1"),
-            Dropout(0.5, name="drop_1"),
+            Dropout(0.4, name="drop_1"),
             Dense(
                 128,
                 activation="relu",
-                kernel_regularizer=l2(1e-3),
+                kernel_regularizer=l2(5e-4),
                 name="hidden_2",
             ),
             BatchNormalization(name="bn_2"),
-            Dropout(0.4, name="drop_2"),
+            Dropout(0.3, name="drop_2"),
             Dense(64, activation="relu", name="hidden_3"),
             Dropout(0.2, name="drop_3"),
             Dense(output_size, activation="softmax", name="output"),
@@ -203,9 +232,14 @@ def train():
     # ── 1. Load & preprocess ───────────────────────────────────────────────────
     data = load_training_data()
     words, classes, documents = preprocess(data)
-    X, y = create_training_set(words, classes, documents)
+    X_train, X_val, y_train, y_val, y_train_idx = create_training_set(words, classes, documents)
 
-    logger.info(f"Training matrix shape: X={X.shape}  y={y.shape}")
+    logger.info(
+        f"Training matrix shape: X_train={X_train.shape}  X_val={X_val.shape}"
+    )
+
+    class_weights = compute_class_weights(y_train_idx, len(classes))
+    logger.info(f"Class weights computed for {len(class_weights)} classes")
 
     # ── 2. Build model ─────────────────────────────────────────────────────────
     model = build_model(len(words), len(classes))
@@ -232,17 +266,18 @@ def train():
     # ── 4. Train ───────────────────────────────────────────────────────────────
     logger.info("Starting training …")
     history = model.fit(
-        X,
-        y,
+        X_train,
+        y_train,
         epochs=400,
         batch_size=8,
-        validation_split=0.15,
+        validation_data=(X_val, y_val),
+        class_weight=class_weights,
         callbacks=callbacks,
         verbose=1,
     )
 
     # ── 5. Final evaluation ────────────────────────────────────────────────────
-    loss, accuracy = model.evaluate(X, y, verbose=0)
+    loss, accuracy = model.evaluate(X_train, y_train, verbose=0)
     logger.info(f"Training set  →  accuracy: {accuracy:.4f}  |  loss: {loss:.4f}")
 
     val_acc = max(history.history.get("val_accuracy", [0.0]))

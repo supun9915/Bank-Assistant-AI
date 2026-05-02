@@ -22,5 +22,8 @@ scikit-learn>=1.4.0         # LabelEncoder, train_test_split (used in training)
 python-dotenv==1.0.0
 python-multipart==0.0.6
 
+# Language detection
+langdetect>=1.0.9
+
 # Optional but recommended
 email-validator==2.1.0

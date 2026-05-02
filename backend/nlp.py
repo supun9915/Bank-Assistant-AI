@@ -221,7 +221,7 @@ def detect_intent(user_input: str) -> Tuple[str, float]:
             predictions: np.ndarray = _ann_model.predict(bow, verbose=0)[0]
 
             # Collect predictions above a minimum threshold
-            THRESHOLD = 0.50
+            THRESHOLD = 0.40
             results = [
                 (_ann_classes[i], float(predictions[i]))
                 for i in range(len(predictions))
@@ -235,7 +235,21 @@ def detect_intent(user_input: str) -> Tuple[str, float]:
                     f"ANN → intent: {intent} ({confidence:.2f})  input: {user_input!r}"
                 )
                 return intent, confidence
-
+            # ANN not confident enough — try keyword matching before giving up
+            kw_intent, kw_conf = _keyword_fallback(user_input)
+            if kw_intent != "UNKNOWN" and kw_conf > 0.0:
+                top_ann = max(float(p) for p in predictions)
+                # Use ANN top intent if it partially agrees with keyword match
+                top_ann_intent = _ann_classes[int(np.argmax(predictions))]
+                if top_ann_intent == kw_intent and top_ann >= 0.25:
+                    logger.info(
+                        f"ANN+KW hybrid \u2192 intent: {kw_intent} ({top_ann:.2f})  input: {user_input!r}"
+                    )
+                    return kw_intent, top_ann
+                logger.info(
+                    f"KW fallback (low ANN conf {top_ann:.2f}) \u2192 {kw_intent} ({kw_conf:.2f})"
+                )
+                return kw_intent, kw_conf
         except Exception as exc:
             logger.error(f"ANN prediction error: {exc}")
 

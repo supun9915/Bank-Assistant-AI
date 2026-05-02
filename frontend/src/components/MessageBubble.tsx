@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "framer-motion";
 import { Bot, User } from "lucide-react";
 
@@ -10,13 +9,7 @@ interface MessageBubbleProps {
   confidence?: number;
 }
 
-export function MessageBubble({
-  sender,
-  text,
-  timestamp,
-  intent,
-  confidence,
-}: MessageBubbleProps) {
+export function MessageBubble({ sender, text, timestamp }: MessageBubbleProps) {
   const isUser = sender === "user";
 
   // Format text: replace \n with line breaks
@@ -61,13 +54,6 @@ export function MessageBubble({
           <span className="text-[10px] text-gray-400 font-medium">
             {timestamp}
           </span>
-          {!isUser && intent && (
-            <span className="text-[10px] bg-blue-50 text-blue-500 border border-blue-100 rounded-full px-2 py-0.5 font-medium">
-              {intent.replace(/_/g, " ")}
-              {confidence !== undefined &&
-                ` · ${Math.round(confidence * 100)}%`}
-            </span>
-          )}
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Header } from "./Header";
 import { MessageBubble } from "./MessageBubble";
 import { ChatInput } from "./ChatInput";
@@ -48,6 +48,23 @@ export function ChatContainer({
     scrollToBottom();
   }, [messages, isTyping]);
 
+  const getFarewellReply = (text: string): string | null => {
+    const normalized = text.toLowerCase().trim();
+    const isThanks = /\b(thank\s*you|thanks|thank\s*u|thx|ty)\b/.test(normalized);
+    const isBye = /\b(bye|goodbye|good\s*bye|see\s*you|see\s*ya|farewell|take\s*care|good\s*night|ciao|later)\b/.test(normalized);
+
+    if (isThanks && isBye) {
+      return "You're welcome! 😊 It was a pleasure assisting you. Goodbye! 👋 Have a wonderful day, and feel free to return anytime you need banking support.";
+    }
+    if (isThanks) {
+      return "You're welcome! 😊 I'm always here to help. Is there anything else I can assist you with today?";
+    }
+    if (isBye) {
+      return "Goodbye! 👋 Thank you for using our Smart Banking Assistant. Have a great day, and don't hesitate to come back whenever you need help!";
+    }
+    return null;
+  };
+
   const handleSendMessage = async (text: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -59,6 +76,28 @@ export function ChatContainer({
       }),
     };
     setMessages((prev) => [...prev, userMessage]);
+
+    const farewellReply = getFarewellReply(text);
+    if (farewellReply) {
+      setIsTyping(true);
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            sender: "bot",
+            text: farewellReply,
+            timestamp: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        ]);
+        setIsTyping(false);
+      }, 700);
+      return;
+    }
+
     setIsTyping(true);
 
     try {
