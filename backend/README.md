@@ -1,25 +1,25 @@
-# Smart Banking Assistant - Backend API
+﻿# Smart Banking Assistant - Backend API
 
-A complete AI-powered banking chatbot backend built with FastAPI, NLTK, TensorFlow/Keras, and MySQL.
+An AI-powered banking chatbot backend built with **FastAPI**, **NLTK**, **TensorFlow/Keras**, and **MySQL**.
 
-## 🚀 Quick Start
+## ðŸš€ Quick Start
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - MySQL 8.0 or higher
 - pip package manager
 
-### 🏃 Fast Setup (For Windows)
+### ðŸƒ Fast Setup (Windows)
 
 ```bat
 # 1. Run the automated setup script
 setup.bat
 
-# 2. Setup database (in MySQL)
-mysql -u root -p < schema.sql
+# 2. Apply database migrations
+python migrate.py up
 
-# 3. Configure credentials — copy .env.example to .env and set DB_PASSWORD
+# 3. Configure credentials â€” copy .env.example to .env and fill in your values
 copy .env.example .env
 
 # 4. Train the AI model (required once before first run)
@@ -30,20 +30,20 @@ python train_model.py
 uvicorn main:app --reload
 ```
 
-### 🏃 Fast Setup (For Linux/Mac)
+### ðŸƒ Fast Setup (Linux/Mac)
 
 ```bash
 # 1. Run the automated setup script
 chmod +x setup.sh
 ./setup.sh
 
-# 2. Setup database (in MySQL)
-mysql -u root -p < schema.sql
+# 2. Apply database migrations
+python migrate.py up
 
-# 3. Configure credentials — copy .env.example to .env and set DB_PASSWORD
+# 3. Configure credentials
 cp .env.example .env
 
-# 4. Train the AI model (required once before first run)
+# 4. Train the AI model
 source venv/bin/activate
 python train_model.py
 
@@ -51,25 +51,28 @@ python train_model.py
 uvicorn main:app --reload
 ```
 
-**🎉 Server running at:** http://localhost:8000
-
-**📚 API Docs:** http://localhost:8000/docs
-
----
-
-## 📋 Features
-
-- **Natural Language Processing**: Intent classification using an NLTK + TensorFlow/Keras ANN (trained via `train_model.py`)
-- **Smart Responses**: Context-aware replies based on user intent
-- **Database Integration**: MySQL for user accounts, transactions, and knowledge base
-- **Learning System**: Stores unknown questions for future improvements
-- **RESTful API**: Clean, documented FastAPI endpoints
-- **Error Handling**: Comprehensive error handling and logging
-- **CORS Support**: Ready for frontend integration
+**ðŸŽ‰ Server running at:** http://localhost:8000  
+**ðŸ“š API Docs:** http://localhost:8000/docs
 
 ---
 
-## 🛠️ Detailed Installation
+## ðŸ“‹ Features
+
+- **AI Intent Classification**: TensorFlow/Keras ANN trained on 22 banking intents
+- **Hybrid NLP**: ANN primary path (threshold 0.40) + NLTK keyword fallback
+- **English-Only Guard**: Non-English messages (Sinhala, Arabic, Chinese, French, etc.) are politely declined using Unicode range detection + `langdetect`
+- **OTP Account Verification**: 3-factor identity check (email + National ID + account number) before exposing personal data
+- **Smart Routing**: Personal-data intents (balance, transactions, FD, pawning) require verified account; general info queries do not
+- **Context-Aware Follow-ups**: Remembers previous intent to answer follow-up questions intelligently
+- **Emoji-Rich Responses**: All replies include relevant emojis for a friendly UX
+- **Self-Learning**: Unrecognised questions saved to DB for model improvement
+- **Chat Log Persistence**: Every request and response logged to MySQL
+- **RESTful API**: Clean FastAPI endpoints with auto-generated Swagger/ReDoc docs
+- **CORS Support**: Ready for any frontend framework
+
+---
+
+## ðŸ› ï¸ Detailed Installation
 
 ### 1. Clone and Navigate to Project
 
@@ -99,37 +102,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Train the AI Model
+### 4. Apply Database Migrations
 
 ```bash
-python train_model.py
+python migrate.py up
 ```
 
-This generates `models/chatbot_model.keras`, `models/words.pkl`, and `models/classes.pkl`. Run this once before starting the server, and again whenever `intents/training_data.json` is updated.
+This auto-creates the `banking_chatbot` database and applies all 4 versioned migrations.
 
-### 5. Setup Database
-
-**Option 1: Using MySQL Command Line**
-
-```bash
-mysql -u root -p < schema.sql
-```
-
-**Option 2: Manual Setup**
-
-```sql
--- Login to MySQL
-mysql -u root -p
-
--- Run the schema file
-SOURCE schema.sql;
-
--- Or copy-paste the SQL commands from schema.sql
-```
-
-### 6. Configure Database Connection
-
-Create a `.env` file from the template (recommended):
+### 5. Configure Environment
 
 ```bash
 # Windows
@@ -139,7 +120,7 @@ copy .env.example .env
 cp .env.example .env
 ```
 
-Then edit `.env` with your MySQL credentials:
+Edit `.env` with your credentials:
 
 ```env
 DB_HOST=localhost
@@ -147,424 +128,215 @@ DB_USER=root
 DB_PASSWORD=your_mysql_password
 DB_NAME=banking_chatbot
 DB_PORT=3306
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_APP_PASSWORD=your_app_password
 ```
 
-> The defaults in `.env.example` use password `mysql`. Update `DB_PASSWORD` to match your MySQL setup.
+### 6. Train the AI Model
+
+```bash
+python train_model.py
+```
+
+Generates `models/chatbot_model.keras`, `models/words.pkl`, and `models/classes.pkl`.  
+Re-run whenever `intents/intents.json` is updated.
 
 ---
 
-## 🚀 Starting the Application
-
-### 1. Activate Virtual Environment
-
-**Windows:**
-
-```bash
-venv\Scripts\activate
-```
-
-**Linux/Mac:**
-
-```bash
-source venv/bin/activate
-```
-
-### 2. Start the Server
+## ðŸš€ Starting the Application
 
 ```bash
 uvicorn main:app --reload
 ```
 
-**Options:**
-
-- `--reload`: Auto-restart on code changes (development mode)
-- `--host 0.0.0.0`: Allow external connections
-- `--port 8000`: Specify port (default: 8000)
-
-**Example with custom port:**
-
-```bash
-uvicorn main:app --reload --port 5000
-```
-
-### 3. Verify Server is Running
-
-Open your browser and navigate to:
-
-- **Health Check**: http://localhost:8000/
-- **API Documentation (Swagger)**: http://localhost:8000/docs
-- **API Documentation (ReDoc)**: http://localhost:8000/redoc
+| URL                         | Purpose      |
+| --------------------------- | ------------ |
+| http://localhost:8000/      | Health check |
+| http://localhost:8000/docs  | Swagger UI   |
+| http://localhost:8000/redoc | ReDoc        |
 
 ---
 
-## 🧪 Testing the API
+## ðŸ§ª Testing the API
 
-### Using Swagger UI (Recommended)
+### Swagger UI (Recommended)
 
 1. Open http://localhost:8000/docs
-2. Click on "POST /api/chat"
-3. Click "Try it out"
-4. Enter test data:
-   ```json
-   {
-     "user_id": 1,
-     "message": "What is my balance?"
-   }
-   ```
-5. Click "Execute"
+2. Click **POST /api/chat** â†’ Try it out â†’ Execute
 
-### Using Postman
-
-Import the [Smart_Banking_Assistant.postman_collection.json](Smart_Banking_Assistant.postman_collection.json) file into Postman.
-
-### Using curl
-
-```bash
-curl -X POST "http://localhost:8000/api/chat" \
-     -H "Content-Type: application/json" \
-     -d '{"user_id": 1, "message": "What is my balance?"}'
-```
-
-### Using Python Test Script
+### Test Script
 
 ```bash
 python test_chatbot.py
 ```
 
----
-
-## 📁 Project Structure
-
-See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed file organization.
-
----
-
-## 🔧 Troubleshooting
-
-### Virtual environment not activating
-
-**Windows:**
+### cURL
 
 ```bash
-# If you get execution policy error
+curl -X POST "http://localhost:8000/api/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"message": "Hello"}'
+```
+
+---
+
+## ðŸ“¡ API Endpoints
+
+### Chat
+
+```http
+POST /api/chat
+```
+
+Request:
+
+```json
+{
+  "message": "What is my account balance?",
+  "user_id": 1,
+  "account_number": "ACC001",
+  "last_intent": "BALANCE"
+}
+```
+
+Response:
+
+```json
+{
+  "reply": "ðŸ’° Your current account balance is **$5,250.00**. Is there anything else I can help you with?",
+  "intent": "BALANCE",
+  "confidence": 0.97,
+  "data": { "balance": 5250.0 }
+}
+```
+
+### Account Verification
+
+```http
+POST /api/account/send-otp
+POST /api/account/verify-otp
+```
+
+Sends a 6-digit OTP to the user's registered email. On success, returns `user_id` and `account_number` for use in subsequent chat requests.
+
+### Health Check
+
+```http
+GET /
+GET /health
+```
+
+---
+
+## ðŸ§  Supported Intents (22)
+
+| Intent               | Description                         | Example Queries                       |
+| -------------------- | ----------------------------------- | ------------------------------------- |
+| `GREETING`           | Conversational greeting             | "Hello", "Good morning"               |
+| `GOODBYE`            | Farewell / thank-you                | "Bye", "Thank you for your support"   |
+| `BALANCE`            | Account balance (requires auth)     | "What is my balance?"                 |
+| `TRANSACTIONS`       | Recent transactions (requires auth) | "Show my transactions"                |
+| `LOAN`               | Loan types, rates, requirements     | "I need a loan", "Loan interest rate" |
+| `ACCOUNT_SERVICES`   | Account opening/closing/updating    | "How do I open an account?"           |
+| `SECURITY`           | Passwords, lost cards, fraud        | "I forgot my password"                |
+| `TRANSFERS`          | Transfers and bill payments         | "How do I transfer money?"            |
+| `FEES`               | Fees, limits, ATM info              | "What are the ATM limits?"            |
+| `DIGITAL_BANKING`    | Mobile app, online banking          | "How do I download the app?"          |
+| `GENERAL`            | Hours, branches, contact info       | "What are your working hours?"        |
+| `FIXED_DEPOSIT`      | FD rates and personal FDs           | "What are your FD rates?"             |
+| `PAWNING`            | Pawning service and tickets         | "Tell me about pawning"               |
+| `FOREIGN_EXCHANGE`   | Currency rates and exchange         | "What is the USD rate?"               |
+| `CARDS`              | Credit/debit card queries           | "How do I block my card?"             |
+| `INVESTMENTS`        | Investment products                 | "Tell me about unit trusts"           |
+| `CREDIT_SCORE`       | Credit score guidance               | "How can I improve my credit score?"  |
+| `COMPLAINTS`         | Complaint submission                | "I want to file a complaint"          |
+| `FORGOT_EMAIL`       | Forgotten or change email           | "I cannot remember my email"          |
+| `PROFANITY_RESPONSE` | Angry/rude messages                 | De-escalation with empathy            |
+| `CAPABILITIES`       | What can the chatbot do             | "What can you help me with?"          |
+| `UNKNOWN`            | Unrecognised queries (saved to DB)  | Anything else                         |
+
+---
+
+## ðŸ” How It Works
+
+1. **Language Guard** â€” Non-English input is detected (Unicode ranges + `langdetect`) and politely declined
+2. **Action Detection** â€” Explicit action requests ("I want to open an account") are routed before NLP
+3. **Intent Detection** â€” Lancaster-stemmed bag-of-words fed into TensorFlow ANN; keyword fallback if confidence < 0.40
+4. **Auth Guard** â€” Personal data intents require verified `account_number`
+5. **Handler** â€” Appropriate handler called; sub-topic routing for detailed responses
+6. **DB Query** â€” Real data fetched from MySQL where needed
+7. **Logging** â€” Every interaction saved to `chat_logs`
+
+---
+
+## ðŸ—ƒï¸ Database Tables
+
+| Table               | Description                                |
+| ------------------- | ------------------------------------------ |
+| `users`             | User accounts (includes `id_number`)       |
+| `accounts`          | Bank accounts and balances                 |
+| `transactions`      | Transaction history                        |
+| `chat_logs`         | Every chatbot interaction (audit log)      |
+| `unknown_questions` | Unrecognised queries for model improvement |
+| `verified_users`    | OTP verification records                   |
+| `loans`             | Customer loan records                      |
+| `loan_repayments`   | Loan repayment schedules                   |
+| `fixed_deposits`    | Fixed deposit records                      |
+| `pawning`           | Pawning ticket records                     |
+
+---
+
+## ðŸ”§ Troubleshooting
+
+### Virtual environment not activating (Windows)
+
+```bash
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
 ### MySQL connection errors
 
 - Verify MySQL is running: `mysql -u root -p`
-- Check credentials in [db.py](db.py)
-- Ensure database exists: `SHOW DATABASES;`
+- Check credentials in `.env`
+- Ensure the database exists: run `python migrate.py up`
 
-### Model files not found / chatbot not responding correctly
+### Model files not found / wrong responses
 
 ```bash
 python train_model.py
 ```
 
-This generates the required `models/chatbot_model.keras`, `models/words.pkl`, and `models/classes.pkl` files.
-
 ### Port already in use
 
 ```bash
-# Use a different port
 uvicorn main:app --reload --port 8001
 ```
 
-### Module not found errors
+### Module not found
 
 ```bash
-# Reinstall dependencies
 pip install -r requirements.txt
 ```
 
 ---
 
-## 📚 Additional Documentation
-
-- [QUICKSTART.md](QUICKSTART.md) - Quick setup guide
-- [API_EXAMPLES.md](API_EXAMPLES.md) - API usage examples
-- [CONFIGURATION.md](CONFIGURATION.md) - Configuration options
-- [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - Project overview
-
-## 📡 API Endpoints
-
-### 1. Health Check
-
-```http
-GET /
-```
-
-Response:
-
-```json
-{
-  "status": "online",
-  "message": "Smart Banking Assistant API is running",
-  "version": "1.0.0"
-}
-```
-
-### 2. Chat Endpoint
-
-```http
-POST /api/chat
-```
-
-Request Body:
-
-```json
-{
-  "message": "What is my account balance?",
-  "user_id": 1
-}
-```
-
-Response:
-
-```json
-{
-  "reply": "Your current account balance is $5,250.00.",
-  "intent": "BALANCE",
-  "confidence": 0.9,
-  "data": {
-    "balance": 5250.0
-  }
-}
-```
-
-## 🧪 Testing Examples
-
-### Using cURL
-
-```bash
-# Greeting
-curl -X POST "http://localhost:8000/api/chat" \
-  -H "Content-Type: application/json" \
-  -d "{\"message\": \"Hello\"}"
-
-# Check Balance
-curl -X POST "http://localhost:8000/api/chat" \
-  -H "Content-Type: application/json" \
-  -d "{\"message\": \"What is my balance?\"}"
-
-# Get Transactions
-curl -X POST "http://localhost:8000/api/chat" \
-  -H "Content-Type: application/json" \
-  -d "{\"message\": \"Show my recent transactions\"}"
-
-# Loan Inquiry
-curl -X POST "http://localhost:8000/api/chat" \
-  -H "Content-Type: application/json" \
-  -d "{\"message\": \"I need a loan\"}"
-```
-
-### Using Python
-
-```python
-import requests
-
-url = "http://localhost:8000/api/chat"
-payload = {"message": "What is my account balance?"}
-
-response = requests.post(url, json=payload)
-print(response.json())
-```
-
-### Using Postman
-
-1. Create a new POST request to `http://localhost:8000/api/chat`
-2. Set Headers: `Content-Type: application/json`
-3. Set Body (raw JSON):
-
-```json
-{
-  "message": "Show my transactions",
-  "user_id": 1
-}
-```
-
-## 🧠 Supported Intents
-
-| Intent           | Keywords                         | Example Queries                                    |
-| ---------------- | -------------------------------- | -------------------------------------------------- |
-| **GREETING**     | hello, hi, hey                   | "Hello", "Good morning"                            |
-| **BALANCE**      | balance, money, account          | "What is my balance?", "How much money do I have?" |
-| **TRANSACTIONS** | transactions, history, statement | "Show my transactions", "Recent purchases"         |
-| **LOAN**         | loan, credit, borrow             | "I need a loan", "Apply for credit"                |
-| **UNKNOWN**      | (fallback)                       | Any unrecognized query                             |
-
-## 📁 Project Structure
-
-```
-backend/
-├── main.py                 # FastAPI application entry point
-├── db.py                   # Database connection and queries
-├── nlp.py                  # NLP processing with NLTK
-├── train_model.py          # ANN training script
-├── requirements.txt        # Python dependencies
-├── schema.sql              # MySQL database schema
-├── .env.example            # Environment variables template
-├── README.md               # This file
-├── intents/                # Training data and intent definitions
-│   ├── training_data.json  # ANN training patterns
-│   ├── intent_keywords.json # Keyword fallback lists
-│   └── intent_info.json    # Intent metadata
-├── models/                 # Pydantic models + trained ANN artefacts
-│   ├── __init__.py
-│   ├── chat_models.py      # Chat request/response models
-│   ├── chatbot_model.keras # Trained Keras model (generated)
-│   ├── words.pkl           # Stemmed vocabulary (generated)
-│   └── classes.pkl         # Intent labels (generated)
-├── routes/                 # API routes
-│   ├── __init__.py
-│   └── chat.py             # Chat endpoint
-└── services/               # Business logic
-    ├── __init__.py
-    └── chat_service.py     # Chat processing service
-```
-
-## 🔍 How It Works
-
-1. **User Input**: User sends a message via POST /api/chat
-2. **Intent Detection**: NLTK preprocesses the text (tokenization, stemming) and the trained TensorFlow/Keras ANN classifies the intent; keyword matching is used as a fallback
-3. **Request Routing**: Based on intent, the appropriate handler is called
-4. **Data Retrieval**: If needed, data is fetched from MySQL database
-5. **Response Generation**: A structured response is created and returned
-6. **Learning**: Unknown questions are saved to the database
-
-## 🗃️ Database Tables
-
-### users
-
-- Stores user information (id, name, email)
-
-### accounts
-
-- Stores account details and balances
-- Links to users table
-
-### transactions
-
-- Stores transaction history
-- Links to accounts table
-
-### knowledge
-
-- Pre-defined Q&A pairs
-- Used for answering common questions
-
-### unknown_questions
-
-- Stores unrecognized queries
-- Used for improving the bot
-
-## 🔒 Security Notes
-
-⚠️ **For Production Use**:
-
-1. Use strong passwords and secure database credentials
-2. Implement authentication and authorization
-3. Use environment variables for sensitive data
-4. Enable HTTPS/TLS
-5. Implement rate limiting
-6. Update CORS settings to allow only specific origins
-7. Add input validation and sanitization
-8. Use prepared statements (already implemented)
-
-## 🐛 Troubleshooting
-
-### Database Connection Error
-
-```
-Error: Can't connect to MySQL server
-```
-
-**Solution**: Check if MySQL is running and credentials in `.env` are correct
-
-### spaCy Model Not Found
-
-```
-OSError: Can't find model 'en_core_web_sm'
-```
-
-**Solution**: Run `python -m spacy download en_core_web_sm`
-
-### Import Errors
-
-```
-ModuleNotFoundError: No module named 'fastapi'
-```
-
-**Solution**: Ensure virtual environment is activated and run `pip install -r requirements.txt`
-
-### Port Already in Use
-
-```
-Error: Address already in use
-```
-
-**Solution**: Use a different port: `uvicorn main:app --reload --port 8001`
-
-## 📚 Additional Resources
-
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [spaCy Documentation](https://spacy.io/)
-- [MySQL Documentation](https://dev.mysql.com/doc/)
-- [Pydantic Documentation](https://docs.pydantic.dev/)
-
-## 🎓 Learning Objectives
-
-This project demonstrates:
-
-- RESTful API design with FastAPI
-- Natural Language Processing with spaCy
-- Database integration with MySQL
-- Clean code architecture and separation of concerns
-- Error handling and logging
-- Request/response validation with Pydantic
-- Environment configuration
-- API documentation
-
-## 📝 Future Enhancements
-
-- [ ] User authentication and sessions
-- [ ] Multi-language support
-- [ ] Voice input integration
-- [ ] Machine learning model for better intent detection
-- [ ] Admin panel for managing knowledge base
-- [ ] Analytics and usage tracking
-- [ ] Integration with real banking APIs
-- [ ] Sentiment analysis
-- [ ] Chat history storage
-
-## 👨‍💻 Development
-
-### Adding New Intents
-
-1. Add keywords to `nlp.py` in `INTENT_KEYWORDS`
-2. Create handler in `services/chat_service.py`
-3. Add routing logic in `process_chat_message()`
-
-### Adding New Endpoints
-
-1. Create new router in `routes/`
-2. Import and include in `main.py`
-
-## 📄 License
-
-This project is created for educational purposes.
-
-## 👥 Author
-
-Student Project - Smart Banking Assistant
-
-## 🙏 Acknowledgments
-
-- FastAPI for the excellent web framework
-- spaCy for NLP capabilities
-- MySQL for reliable data storage
+## ðŸ“š Additional Documentation
+
+| File                                         | Contents                                     |
+| -------------------------------------------- | -------------------------------------------- |
+| [QUICKSTART.md](QUICKSTART.md)               | 5-minute setup guide                         |
+| [API_EXAMPLES.md](API_EXAMPLES.md)           | API usage examples and sample responses      |
+| [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | Architecture, module descriptions, DB schema |
 
 ---
 
-**Happy Coding! 🚀**
+## ðŸ”’ Security Notes
+
+1. All SQL queries use parameterised statements (injection-safe)
+2. OTP is 6-digit, 5-minute TTL, stored server-side only
+3. Personal data gated behind 3-factor OTP verification
+4. Secrets loaded from `.env` only â€” never hardcoded
+5. Pydantic validates all incoming request data
+6. For production: enable HTTPS, rate limiting, and restrict CORS origins

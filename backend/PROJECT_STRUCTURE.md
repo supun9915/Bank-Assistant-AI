@@ -93,9 +93,10 @@ The **Smart Banking Assistant** is an AI-powered conversational chatbot backend 
 ### 🧠 NLP Capabilities
 
 - **Primary**: TensorFlow/Keras ANN softmax classifier — trained on intent patterns, produces probability scores per class
-- **Fallback**: NLTK keyword matching — used if model artefacts are missing or below confidence threshold
+- **Hybrid Fallback**: If ANN confidence < 0.40, NLTK keyword matching is used; if both agree on the same intent AND ANN ≥ 0.25, the intent is returned with ANN confidence; otherwise keyword result is used
+- **Language Guard**: Unicode range check (Sinhala, Arabic, CJK, Devanagari, Cyrillic, etc.) + `langdetect` for Latin-script non-English text — non-English input returns `UNSUPPORTED_LANGUAGE` before NLP
 - Tokenises and Lancaster-stems user input; encodes as bag-of-words vector before ANN inference
-- Confidence threshold of **0.50** — predictions below this fall through to keyword matching then UNKNOWN
+- Confidence threshold of **0.40** — predictions below this fall through to hybrid keyword matching
 - Nonsense/non-text guard — inputs with fewer than 2 alphabetic characters return UNKNOWN immediately (no model inference)
 - `reload_intents()` function allows hot-reloading of intent definitions at runtime
 - Regex-based entity extraction for numeric and currency values
@@ -154,7 +155,13 @@ The **Smart Banking Assistant** is an AI-powered conversational chatbot backend 
 | **TensorFlow / Keras** | ≥ 2.16.0 | Trains and runs the ANN intent classifier; Keras 3 high-level API for model definition, training, and inference; GPU auto-detected (CPU fallback on native Windows ≥ TF 2.11) |
 | **NLTK**               | ≥ 3.8.1  | Tokenisation and Lancaster stemming in `nlp.py` and `train_model.py`; used to build bag-of-words feature vectors                                                              |
 | **NumPy**              | ≥ 1.26.0 | Bag-of-Words vector construction and numerical array handling during training and inference                                                                                   |
-| **scikit-learn**       | ≥ 1.4.0  | `LabelEncoder` for intent label encoding; `train_test_split` for validation split during training                                                                             |
+| **scikit-learn**       | ≥ 1.4.0  | `LabelEncoder` for intent label encoding; `train_test_split` for validation split; `compute_class_weight` for balanced class weighting during training                        |
+
+### Language Detection
+
+| Technology     | Version | Why Used                                                                                                                                                                    |
+| -------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **langdetect** | ≥ 1.0.9 | Detects Latin-script non-English languages (French, Spanish, etc.) in user messages; combined with Unicode range checks to enforce English-only input before NLP processing |
 
 ### Database
 
@@ -272,7 +279,10 @@ numpy>=1.26.0             # Bag-of-words vectors and numerical arrays
 nltk>=3.8.1               # Tokenisation + Lancaster stemming
 
 # Machine Learning utilities
-scikit-learn>=1.4.0       # LabelEncoder, train_test_split (training only)
+scikit-learn>=1.4.0       # LabelEncoder, train_test_split, compute_class_weight (training only)
+
+# Language detection
+langdetect>=1.0.9         # Latin-script non-English language detection
 
 # Utilities
 python-dotenv==1.0.0      # .env file loader
@@ -363,19 +373,21 @@ email-validator==2.1.0    # Email validation in Pydantic models
 - `extract_entities()` — Regex extraction of numbers and currency values
 - `reload_intents()` — Hot-reload intent definitions from `intents.json`
 
-**Supported Intents (18 total):**
+**Supported Intents (22 total):**
 
-- `GREETING`, `BALANCE`, `TRANSACTIONS`, `LOAN`, `ACCOUNT_SERVICES`
+- `GREETING`, `GOODBYE`, `BALANCE`, `TRANSACTIONS`, `LOAN`, `ACCOUNT_SERVICES`
 - `SECURITY`, `TRANSFERS`, `FEES`, `DIGITAL_BANKING`, `GENERAL`
 - `CARDS`, `INVESTMENTS`, `CREDIT_SCORE`, `COMPLAINTS`
-- `FOREIGN_EXCHANGE`, `FIXED_DEPOSIT`, `GOODBYE`, `UNKNOWN`
+- `FOREIGN_EXCHANGE`, `FIXED_DEPOSIT`, `PAWNING`
+- `FORGOT_EMAIL`, `PROFANITY_RESPONSE`, `CAPABILITIES`, `UNKNOWN`
 
 **ANN Configuration:**
 
 - Model file: `models/chatbot_model.keras`
 - Vocabulary: `models/words.pkl` (Lancaster-stemmed)
 - Class labels: `models/classes.pkl`
-- Confidence threshold: **0.50** (falls back to keyword matching below this)
+- Confidence threshold: **0.40** (hybrid keyword fallback if below this)
+- Training: 1142 samples, stratified split (85/15), balanced class weights
 
 ---
 
@@ -457,6 +469,7 @@ Core business logic for chat processing and intent routing.
 **Intent Handlers:**
 
 - `handle_greeting_intent()` — Short conversational greeting (randomised from 5 variants)
+- `handle_goodbye_intent()` — Farewell message (randomised from 5 variants)
 - `handle_balance_intent()` — Fetch and format account balance
 - `handle_transactions_intent()` — Fetch and format recent transactions
 - `handle_loan_intent()` — Loan products, rates, and eligibility
@@ -466,6 +479,12 @@ Core business logic for chat processing and intent routing.
 - `handle_fees_intent()` — Transaction fees, maintenance fees, daily limits
 - `handle_digital_banking_intent()` — Mobile app, online banking, e-statements
 - `handle_general_intent()` — Hours, branches, ATMs, contact information
+- `handle_fixed_deposit_intent()` — FD rates and personal FD records
+- `handle_pawning_intent()` — Pawning service and ticket records
+- `handle_foreign_exchange_intent()` — Currency exchange info
+- `handle_forgot_email_intent()` — Email recovery/update guidance
+- `handle_profanity_intent()` — De-escalation response for angry/rude messages
+- `handle_capabilities_intent()` — Full list of chatbot capabilities
 - `handle_action_request()` — Redirect when user wants to perform an action
 - `handle_unknown_intent()` — Save question and return help prompt
 
@@ -534,18 +553,20 @@ Core business logic for chat processing and intent routing.
 ┌─────────────────────────────────────────────┐
 │      services/chat_service.py               │
 │  ┌───────────────────────────────────────┐  │
-│  │  1. Check _is_action_request()        │  │
-│  │  2. detect_intent() via nlp.py        │  │
-│  │  3. Guard: account required? (OTP)    │  │
-│  │  4. Route to intent handler           │  │
-│  │  5. save_chat_log() to DB             │  │
+│  │  1. Language guard (Unicode+langdetect)│  │
+│  │  2. Check _is_action_request()        │  │
+│  │  3. detect_intent() via nlp.py        │  │
+│  │  4. Guard: account required? (OTP)    │  │
+│  │  5. Route to intent handler           │  │
+│  │  6. save_chat_log() to DB             │  │
 │  └───────────────────────────────────────┘  │
 └──────┬──────────────────────────────────────┘
        │
        ├─────► nlp.py (Intent Detection)
+       │       - Language guard (Unicode ranges + langdetect)
        │       - _has_meaningful_text() guard
-       │       - ANN bag-of-words inference (threshold 0.50)
-       │       - Keyword fallback if below threshold
+       │       - ANN bag-of-words inference (threshold 0.40)
+       │       - Hybrid keyword fallback if below threshold
        │       - Return (intent, confidence)
        │
        └─────► db.py (Database Queries)
@@ -773,6 +794,7 @@ nlp.py
 │   ├── nltk.tokenize (word_tokenize)
 │   └── nltk.stem (LancasterStemmer)
 ├── numpy
+├── langdetect (Latin-script language detection)
 ├── pickle
 ├── re
 ├── logging
@@ -821,7 +843,12 @@ NLP Preprocessing
 Machine Learning Utilities (training only)
 └── scikit-learn>=1.4.0
     ├── LabelEncoder
-    └── train_test_split
+    ├── train_test_split
+    └── compute_class_weight (balanced class weighting)
+
+Language Detection
+└── langdetect>=1.0.9
+    └── Latin-script non-English language detection
 
 Utilities
 ├── python-dotenv==1.0.0
@@ -961,15 +988,20 @@ Database (MySQL)
    - OTP is 6-digit numeric, valid for 5 minutes, stored server-side only
    - Personal intents (BALANCE, TRANSACTIONS) blocked until `account_number` is verified
 
-4. **Secret Management**
+4. **Language Guard**
+   - Step 1: Unicode range detection rejects Sinhala, Arabic, CJK, Devanagari, Cyrillic, and 20+ other non-Latin scripts before any NLP processing
+   - Step 2: `langdetect` identifies Latin-script non-English (French, Spanish, etc.) for messages with 3+ words
+   - Returns `UNSUPPORTED_LANGUAGE` with an English-only message
+
+5. **Secret Management**
    - Database credentials and email app-passwords loaded from `.env` only
    - `.env` is excluded from version control via `.gitignore`
 
-5. **Error Handling**
+6. **Error Handling**
    - Try/except blocks at every layer; errors logged, not exposed in responses
    - No sensitive data in HTTP error messages
 
-6. **Connection Management**
+7. **Connection Management**
    - Database connections closed automatically via context manager even on exceptions
 
 ---
@@ -1113,7 +1145,7 @@ Lines of Code (approx):
 ✅ TensorFlow/Keras ANN intent classifier  
 ✅ NLTK preprocessing (Lancaster stemming, tokenisation)  
 ✅ MySQL database with versioned migrations  
-✅ 18 supported intents  
+✅ **22 supported intents** (1142 training samples)  
 ✅ OTP-based 3-factor account identity verification  
 ✅ SMTP email delivery for OTP  
 ✅ Personal data gated behind verified account  
@@ -1121,8 +1153,12 @@ Lines of Code (approx):
 ✅ Self-learning: unknown questions saved with deduplication  
 ✅ Context-aware follow-up handling  
 ✅ Nonsense/non-text input guard  
+✅ **English-only language guard** (Unicode ranges + langdetect)  
 ✅ Action request detection  
 ✅ Multiple intent sub-topic routing  
+✅ **Emoji-rich responses** across all handlers  
+✅ Hybrid ANN + keyword fallback (threshold 0.40)  
+✅ Balanced class weights during ANN training  
 ✅ Modular layered architecture  
 ✅ Pydantic validation on all endpoints  
 ✅ Parameterised SQL (injection-safe)  

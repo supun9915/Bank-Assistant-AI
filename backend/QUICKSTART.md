@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-- Python 3.8+
+- Python **3.10+**
 - MySQL 8.0+
 
 ---
@@ -101,7 +101,7 @@ DB_PORT=3306
 
 ### 4. Train the AI Model
 
-Run this **once** before starting the server (or whenever `intents/training_data.json` changes):
+Run this **once** before starting the server (or whenever `intents/intents.json` changes):
 
 ```bat
 # Windows
@@ -163,10 +163,15 @@ curl -X POST "http://localhost:8000/api/chat" \
 
 ```json
 {"message": "Hello"}
+{"message": "What can you do?"}
 {"message": "What is my account balance?"}
 {"message": "Show my recent transactions"}
 {"message": "I need a loan"}
-{"message": "What are your business hours?"}
+{"message": "What are your FD rates?"}
+{"message": "What are your working hours?"}
+{"message": "What is the USD exchange rate?"}
+{"message": "I forgot my email"}
+{"message": "Thank you for your support"}
 ```
 
 ---
@@ -198,13 +203,13 @@ See [README.md](README.md) for complete documentation.
 
 ## 🎯 Success Checklist
 
-- [ ] Python 3.8+ installed
+- [ ] Python 3.10+ installed
 - [ ] MySQL running
 - [ ] Virtual environment created and activated
 - [ ] Dependencies installed (`pip install -r requirements.txt`)
 - [ ] Database migrations applied (`python migrate.py up`)
-- [ ] `.env` configured with correct DB credentials
-- [ ] Model trained (`python train_model.py`)
+- [ ] `.env` configured with DB credentials **and** email credentials
+- [ ] Model trained (`python train_model.py`) — should report **22 classes**
 - [ ] Server starts without errors (`uvicorn main:app --reload`)
 - [ ] API responds to test queries
 
