@@ -17,6 +17,14 @@ class ChatRequest(BaseModel):
         default=1,
         description="User ID for personalized responses"
     )
+    last_intent: Optional[str] = Field(
+        default=None,
+        description="Intent detected from the previous message, used for context-aware follow-up responses"
+    )
+    account_number: Optional[str] = Field(
+        default=None,
+        description="Verified account number for personal account queries"
+    )
     
     class Config:
         json_schema_extra = {

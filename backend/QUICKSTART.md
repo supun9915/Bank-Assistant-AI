@@ -1,12 +1,11 @@
 # Quick Start Guide - Smart Banking Assistant
 
-## ⚡ Quick Setup (5 minutes)
+## ⚡ Quick Setup
 
 ### Prerequisites
 
-- Python 3.8+
+- Python **3.10+**
 - MySQL 8.0+
-- Git (optional)
 
 ---
 
@@ -14,91 +13,135 @@
 
 ### 1. Install Dependencies
 
-**Windows:**
+**Windows (automated):**
 
-```bash
-# Run the setup script
+```bat
 setup.bat
 ```
 
-**Linux/Mac:**
+**Or manually:**
+
+```bat
+# Create and activate virtual environment
+python -m venv venv
+.\venv\Scripts\activate
+
+# Install packages
+pip install -r requirements.txt
+```
+
+**Linux/Mac (automated):**
 
 ```bash
-# Make script executable
 chmod +x setup.sh
-
-# Run the setup script
 ./setup.sh
 ```
 
 **Or manually:**
 
 ```bash
-# Create virtual environment
 python -m venv venv
-
-# Activate it
-# Windows: venv\Scripts\activate
-# Linux/Mac: source venv/bin/activate
-
-# Install packages
-python -m pip install -r requirements.txt
-
-# Download spaCy model
-python -m spacy download en_core_web_sm
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ---
 
 ### 2. Setup Database
 
-```sql
--- Login to MySQL
-mysql -u root -p
+Apply all versioned migrations to create the database and tables:
 
--- Create database and tables
-SOURCE schema.sql;
+```bat
+# Windows
+.\venv\Scripts\activate
+python migrate.py up
+```
 
--- Or copy the SQL from schema.sql and paste it
+```bash
+# Linux/Mac
+source venv/bin/activate
+python migrate.py up
+```
+
+This auto-creates the `banking_chatbot` database and applies all migrations in order.
+
+**Check migration status at any time:**
+
+```bash
+python migrate.py status
 ```
 
 ---
 
 ### 3. Configure Environment
 
+```bat
+# Windows
+copy .env.example .env
+notepad .env
+```
+
 ```bash
-# Copy example file
+# Linux/Mac
 cp .env.example .env
-
-# Edit with your credentials
-# Windows: notepad .env
-# Linux/Mac: nano .env
+nano .env
 ```
 
-Update these values in `.env`:
+Update `.env` with your MySQL credentials:
 
-```
+```env
+DB_HOST=localhost
+DB_USER=root
 DB_PASSWORD=your_mysql_password
+DB_NAME=banking_chatbot
+DB_PORT=3306
 ```
 
 ---
 
-### 4. Run the Server
+### 4. Train the AI Model
+
+Run this **once** before starting the server (or whenever `intents/intents.json` changes):
+
+```bat
+# Windows
+.\venv\Scripts\activate
+python train_model.py
+```
 
 ```bash
-python -m uvicorn main:app --reload
+# Linux/Mac
+source venv/bin/activate
+python train_model.py
 ```
 
-Server will start at: http://localhost:8000
+This generates `models/chatbot_model.keras`, `models/words.pkl`, and `models/classes.pkl`.
 
 ---
 
-### 5. Test the API
+### 5. Start the Server
 
-**Option 1: Browser**
+```bat
+# Windows
+.\venv\Scripts\activate
+uvicorn main:app --reload
+```
 
-- Open http://localhost:8000/docs
-- Try the `/api/chat` endpoint
+```bash
+# Linux/Mac
+source venv/bin/activate
+uvicorn main:app --reload
+```
+
+Server starts at: **http://localhost:8000**
+
+---
+
+### 6. Test the API
+
+**Option 1: Interactive Docs**
+
+Open http://localhost:8000/docs and try the `/api/chat` endpoint.
 
 **Option 2: Test Script**
 
@@ -118,14 +161,17 @@ curl -X POST "http://localhost:8000/api/chat" \
 
 ## 🧪 Sample Queries
 
-Try these in the API:
-
 ```json
 {"message": "Hello"}
+{"message": "What can you do?"}
 {"message": "What is my account balance?"}
 {"message": "Show my recent transactions"}
 {"message": "I need a loan"}
-{"message": "What are your business hours?"}
+{"message": "What are your FD rates?"}
+{"message": "What are your working hours?"}
+{"message": "What is the USD exchange rate?"}
+{"message": "I forgot my email"}
+{"message": "Thank you for your support"}
 ```
 
 ---
@@ -134,16 +180,18 @@ Try these in the API:
 
 ### "Can't connect to MySQL"
 
-- Make sure MySQL is running
-- Check credentials in `.env`
+- Make sure MySQL service is running
+- Verify credentials in `.env` match your MySQL setup
 
-### "spaCy model not found"
+### "Model file not found" / chatbot not responding correctly
 
-- Run: `python -m spacy download en_core_web_sm`
+- Run `python train_model.py` to generate the model files
 
 ### "Port 8000 already in use"
 
-- Use: `python -m uvicorn main:app --reload --port 8001`
+```bash
+uvicorn main:app --reload --port 8001
+```
 
 ---
 
@@ -155,13 +203,14 @@ See [README.md](README.md) for complete documentation.
 
 ## 🎯 Success Checklist
 
-- [ ] Python 3.8+ installed
+- [ ] Python 3.10+ installed
 - [ ] MySQL running
+- [ ] Virtual environment created and activated
 - [ ] Dependencies installed (`pip install -r requirements.txt`)
-- [ ] spaCy model downloaded
-- [ ] Database created (schema.sql imported)
-- [ ] .env configured
-- [ ] Server starts without errors
+- [ ] Database migrations applied (`python migrate.py up`)
+- [ ] `.env` configured with DB credentials **and** email credentials
+- [ ] Model trained (`python train_model.py`) — should report **22 classes**
+- [ ] Server starts without errors (`uvicorn main:app --reload`)
 - [ ] API responds to test queries
 
 ---

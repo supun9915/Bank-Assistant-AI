@@ -1,15 +1,9 @@
--- =====================================================
--- Smart Banking Assistant - Database Schema
--- MySQL Database Setup
--- =====================================================
-
--- Create database
-CREATE DATABASE IF NOT EXISTS banking_chatbot;
-USE banking_chatbot;
+-- Migration: Initial Schema
+-- Created: 2026-04-25
+-- Sets up all core tables and seeds sample data
 
 -- =====================================================
 -- Table: users
--- Stores user account information
 -- =====================================================
 CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -21,7 +15,6 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- =====================================================
 -- Table: accounts
--- Stores bank account details and balances
 -- =====================================================
 CREATE TABLE IF NOT EXISTS accounts (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -39,7 +32,6 @@ CREATE TABLE IF NOT EXISTS accounts (
 
 -- =====================================================
 -- Table: transactions
--- Stores transaction history
 -- =====================================================
 CREATE TABLE IF NOT EXISTS transactions (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -57,7 +49,6 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 -- =====================================================
 -- Table: chat_logs
--- Stores all chat requests and responses for developer review
 -- =====================================================
 CREATE TABLE IF NOT EXISTS chat_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -76,7 +67,6 @@ CREATE TABLE IF NOT EXISTS chat_logs (
 
 -- =====================================================
 -- Table: unknown_questions
--- Stores questions that the bot couldn't answer (for learning)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS unknown_questions (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -90,24 +80,20 @@ CREATE TABLE IF NOT EXISTS unknown_questions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
--- SAMPLE DATA FOR TESTING
+-- Sample data
 -- =====================================================
-
--- Insert sample users
-INSERT INTO users (name, email) VALUES
+INSERT IGNORE INTO users (name, email) VALUES
 ('John Doe', 'john.doe@example.com'),
 ('Jane Smith', 'jane.smith@example.com'),
 ('Bob Johnson', 'bob.johnson@example.com');
 
--- Insert sample accounts
-INSERT INTO accounts (user_id, account_number, account_type, balance) VALUES
+INSERT IGNORE INTO accounts (user_id, account_number, account_type, balance) VALUES
 (1, 'ACC1001234567', 'savings', 5250.00),
 (1, 'ACC1001234568', 'checking', 1200.50),
 (2, 'ACC2001234567', 'savings', 8750.25),
 (3, 'ACC3001234567', 'checking', 3420.80);
 
--- Insert sample transactions
-INSERT INTO transactions (account_id, amount, type, description, reference_number, date, balance_after) VALUES
+INSERT IGNORE INTO transactions (account_id, amount, type, description, reference_number, date, balance_after) VALUES
 (1, 500.00, 'credit', 'Salary Deposit', 'TXN001', '2026-04-20 09:00:00', 5250.00),
 (1, 150.00, 'debit', 'Grocery Shopping at Walmart', 'TXN002', '2026-04-19 14:30:00', 4750.00),
 (1, 75.50, 'debit', 'Restaurant - Pizza Hut', 'TXN003', '2026-04-18 19:45:00', 4900.00),
@@ -115,34 +101,3 @@ INSERT INTO transactions (account_id, amount, type, description, reference_numbe
 (1, 200.00, 'debit', 'Electric Bill Payment', 'TXN005', '2026-04-16 08:15:00', 3975.50),
 (1, 50.00, 'debit', 'Netflix Subscription', 'TXN006', '2026-04-15 12:00:00', 4175.50),
 (1, 300.00, 'credit', 'Refund from Amazon', 'TXN007', '2026-04-14 16:30:00', 4225.50);
-
--- chat_logs table starts empty — rows are inserted automatically at runtime
-
--- =====================================================
--- VERIFICATION QUERIES
--- =====================================================
-
--- Verify data insertion
-SELECT 'Users created:' as Info, COUNT(*) as Count FROM users
-UNION ALL
-SELECT 'Accounts created:', COUNT(*) FROM accounts
-UNION ALL
-SELECT 'Transactions created:', COUNT(*) FROM transactions
-UNION ALL
-SELECT 'Chat logs:', COUNT(*) FROM chat_logs
-UNION ALL
-SELECT 'Unknown questions:', COUNT(*) FROM unknown_questions;
-
--- Display sample data
-SELECT '=== Sample User Account ===' as Info;
-SELECT u.name, u.email, a.account_number, a.account_type, a.balance
-FROM users u
-JOIN accounts a ON u.id = a.user_id
-WHERE u.id = 1;
-
-SELECT '=== Sample Transactions ===' as Info;
-SELECT amount, type, description, date
-FROM transactions
-WHERE account_id = 1
-ORDER BY date DESC
-LIMIT 5;

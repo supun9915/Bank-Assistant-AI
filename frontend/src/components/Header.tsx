@@ -1,25 +1,114 @@
-import React from 'react';
-import { Bot, MoreVertical } from 'lucide-react';
-export function Header() {
+import {
+  Bot,
+  Shield,
+  Wifi,
+  WifiOff,
+  UserCheck,
+  UserX,
+  Trash2,
+} from "lucide-react";
+import { AccountInfo } from "./AccountPanel";
+
+interface HeaderProps {
+  isOnline?: boolean;
+  accountInfo?: AccountInfo | null;
+  onOpenAccountPanel?: () => void;
+  onClearChat?: () => void;
+}
+
+export function Header({
+  isOnline = true,
+  accountInfo,
+  onOpenAccountPanel,
+  onClearChat,
+}: HeaderProps) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 rounded-t-2xl z-10 shadow-sm">
+    <div className="relative flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-blue-700 to-blue-600 z-10">
+      {/* Left: avatar + title */}
       <div className="flex items-center space-x-3">
         <div className="relative">
-          <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-full flex items-center justify-center text-blue-600">
-            <Bot size={22} />
+          <div className="w-11 h-11 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white shadow-inner">
+            <Bot size={24} />
           </div>
-          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+          <div
+            className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-blue-600 rounded-full ${
+              isOnline ? "bg-green-400 animate-pulse" : "bg-red-400"
+            }`}
+          />
         </div>
         <div>
-          <h1 className="text-sm font-semibold text-gray-800">
-            Banking Assistant
+          <h1 className="text-sm font-bold text-white tracking-wide">
+            <span className="hidden sm:inline">Smart Banking Assistant</span>
+            <span className="sm:hidden">Banking Assistant</span>
           </h1>
-          <p className="text-xs text-green-600 font-medium">Online</p>
+          <div className="flex items-center space-x-1 mt-0.5">
+            {isOnline ? (
+              <>
+                <Wifi size={10} className="text-green-300" />
+                <span className="text-[11px] text-green-300 font-medium">
+                  Connected
+                </span>
+              </>
+            ) : (
+              <>
+                <WifiOff size={10} className="text-red-300" />
+                <span className="text-[11px] text-red-300 font-medium">
+                  Disconnected
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
-      <button className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-50">
-        <MoreVertical size={20} />
-      </button>
-    </div>);
 
+      {/* Right: account button + secure badge */}
+      <div className="flex items-center space-x-2">
+        <button
+          onClick={onOpenAccountPanel}
+          title={
+            accountInfo
+              ? `Account: ${accountInfo.account_holder}`
+              : "Connect your account"
+          }
+          className={`flex items-center space-x-1.5 rounded-full px-3 py-1.5 transition-colors ${
+            accountInfo
+              ? "bg-green-500/30 hover:bg-green-500/50 border border-green-400/40"
+              : "bg-white/15 hover:bg-white/25 border border-white/20"
+          }`}
+        >
+          {accountInfo ? (
+            <>
+              <UserCheck size={13} className="text-green-300" />
+              <span className="text-[11px] text-green-200 font-medium max-w-[60px] sm:max-w-[80px] truncate">
+                {accountInfo.account_holder.split(" ")[0]}
+              </span>
+            </>
+          ) : (
+            <>
+              <UserX size={13} className="text-white/70" />
+              <span className="text-[11px] text-white/70 font-medium">
+                My Account
+              </span>
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={onClearChat}
+          title="Clear chat"
+          className="flex items-center space-x-1.5 bg-white/15 hover:bg-red-500/40 border border-white/20 hover:border-red-400/40 rounded-full px-3 py-1.5 transition-colors"
+        >
+          <Trash2 size={13} className="text-white/70" />
+          <span className="text-[11px] text-white/70 font-medium hidden sm:inline">
+            Clear
+          </span>
+        </button>
+
+        <div className="flex items-center space-x-1.5 bg-white/15 rounded-full px-3 py-1.5">
+          <Shield size={13} className="text-green-300" />
+          <span className="text-[11px] text-white/90 font-medium">Secure</span>
+        </div>
+      </div>
+    </div>
+  );
 }

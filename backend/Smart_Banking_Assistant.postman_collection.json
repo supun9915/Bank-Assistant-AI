@@ -1,4 +1,4 @@
-{
+﻿{
   "info": {
     "name": "Smart Banking Assistant API",
     "description": "API collection for testing the Smart Banking Assistant chatbot",
@@ -6,161 +6,299 @@
   },
   "item": [
     {
-      "name": "Health Check",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/",
-          "host": ["{{base_url}}"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Detailed Health Check",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/health",
-          "host": ["{{base_url}}"],
-          "path": ["health"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Chat - Greeting",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"message\": \"Hello\",\n  \"user_id\": 1\n}"
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "Root Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"]
+            }
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/api/chat",
-          "host": ["{{base_url}}"],
-          "path": ["api", "chat"]
+        {
+          "name": "Detailed Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Chat Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chat/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "health"]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
-      "name": "Chat - Balance Query",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"message\": \"What is my account balance?\",\n  \"user_id\": 1\n}"
+      "name": "Account Verification",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"id_number\": \"NIC1001001\",\n  \"account_number\": \"ACC1001234567\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/account/send-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "account", "send-otp"]
+            }
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/api/chat",
-          "host": ["{{base_url}}"],
-          "path": ["api", "chat"]
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/account/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "account", "verify-otp"]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
-      "name": "Chat - Transaction History",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"message\": \"Show my recent transactions\",\n  \"user_id\": 1\n}"
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Chat - Greeting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hello\",\n  \"user_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/api/chat",
-          "host": ["{{base_url}}"],
-          "path": ["api", "chat"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Chat - Loan Inquiry",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"message\": \"I need a loan\",\n  \"user_id\": 1\n}"
+        {
+          "name": "Chat - Balance Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What is my account balance?\",\n  \"user_id\": 1,\n  \"account_number\": \"ACC1001234567\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/api/chat",
-          "host": ["{{base_url}}"],
-          "path": ["api", "chat"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Chat - Knowledge Base Query",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"message\": \"What are your business hours?\",\n  \"user_id\": 1\n}"
+        {
+          "name": "Chat - Transaction History",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Show my recent transactions\",\n  \"user_id\": 1,\n  \"account_number\": \"ACC1001234567\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/api/chat",
-          "host": ["{{base_url}}"],
-          "path": ["api", "chat"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Chat - Unknown Intent",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"message\": \"What is the weather today?\",\n  \"user_id\": 1\n}"
+        {
+          "name": "Chat - Loan Inquiry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"I need a loan\",\n  \"user_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/api/chat",
-          "host": ["{{base_url}}"],
-          "path": ["api", "chat"]
+        {
+          "name": "Chat - Fixed Deposit Inquiry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Tell me about fixed deposits\",\n  \"user_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Chat - Pawning Inquiry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"How does pawning work?\",\n  \"user_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Chat - Knowledge Base Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What are your business hours?\",\n  \"user_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Chat - Unknown Intent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What is the weather today?\",\n  \"user_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Chat - With Context (last_intent)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Tell me more\",\n  \"user_id\": 1,\n  \"last_intent\": \"loan_inquiry\",\n  \"account_number\": \"ACC1001234567\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat"]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     }
   ],
   "variable": [

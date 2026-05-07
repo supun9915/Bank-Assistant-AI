@@ -1,106 +1,197 @@
-import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
-import { Header } from './Header';
-import { MessageBubble } from './MessageBubble';
-import { ChatInput } from './ChatInput';
-import { TypingIndicator } from './TypingIndicator';
+import { useEffect, useState, useRef } from "react";
+import { Header } from "./Header";
+import { MessageBubble } from "./MessageBubble";
+import { ChatInput } from "./ChatInput";
+import { TypingIndicator } from "./TypingIndicator";
+import { sendChatMessage } from "../api";
+import { AccountInfo } from "./AccountPanel";
+
 interface Message {
   id: string;
-  sender: 'user' | 'bot';
+  sender: "user" | "bot";
   text: string;
   timestamp: string;
+  intent?: string;
+  confidence?: number;
 }
-export function ChatContainer() {
+
+interface ChatContainerProps {
+  accountInfo: AccountInfo | null;
+  onOpenAccountPanel: () => void;
+}
+
+export function ChatContainer({
+  accountInfo,
+  onOpenAccountPanel,
+}: ChatContainerProps) {
   const [messages, setMessages] = useState<Message[]>([
-  {
-    id: '1',
-    sender: 'bot',
-    text: 'Hello! I am your Smart Banking Assistant. How can I help you today?',
-    timestamp: new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }]
-  );
+    {
+      id: "1",
+      sender: "bot",
+      text: "👋 Hello! I am your Smart Banking Assistant. How can I help you today?\n\nYou can ask me about your balance, transactions, loans, fixed deposits, and more.",
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    },
+  ]);
   const [isTyping, setIsTyping] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: 'smooth'
-    });
+  const lastIntentRef = useRef<string | undefined>(undefined);
+
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: Date.now().toString(),
+        sender: "bot",
+        text: "👋 Hello! I am your Smart Banking Assistant. How can I help you today?\n\nYou can ask me about your balance, transactions, loans, fixed deposits, and more.",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
+    lastIntentRef.current = undefined;
   };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  const getFarewellReply = (text: string): string | null => {
+    const normalized = text.toLowerCase().trim();
+    const isThanks = /\b(thank\s*you|thanks|thank\s*u|thx|ty)\b/.test(
+      normalized,
+    );
+    const isBye =
+      /\b(bye|goodbye|good\s*bye|see\s*you|see\s*ya|farewell|take\s*care|good\s*night|ciao|later)\b/.test(
+        normalized,
+      );
+
+    if (isThanks && isBye) {
+      return "You're welcome! 😊 It was a pleasure assisting you. Goodbye! 👋 Have a wonderful day, and feel free to return anytime you need banking support.";
+    }
+    if (isThanks) {
+      return "You're welcome! 😊 I'm always here to help. Is there anything else I can assist you with today?";
+    }
+    if (isBye) {
+      return "Goodbye! 👋 Thank you for using our Smart Banking Assistant. Have a great day, and don't hesitate to come back whenever you need help!";
+    }
+    return null;
+  };
+
   const handleSendMessage = async (text: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
-      sender: 'user',
+      sender: "user",
       text,
       timestamp: new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
     setMessages((prev) => [...prev, userMessage]);
+
+    const farewellReply = getFarewellReply(text);
+    if (farewellReply) {
+      setIsTyping(true);
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            sender: "bot",
+            text: farewellReply,
+            timestamp: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        ]);
+        setIsTyping(false);
+      }, 700);
+      return;
+    }
+
     setIsTyping(true);
+
     try {
-      // Simulate network delay for better UX
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const response = await axios.post('http://localhost:8000/chat', {
-        message: text
+      const data = await sendChatMessage({
+        message: text,
+        last_intent: lastIntentRef.current,
+        account_number: accountInfo?.account_number,
+        user_id: accountInfo?.user_id,
       });
+
+      if (data.intent) lastIntentRef.current = data.intent;
+      setIsOnline(true);
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        sender: 'bot',
+        sender: "bot",
         text:
-        response.data.reply ||
-        "I received your message, but couldn't process the reply.",
+          data.reply ||
+          "I received your message, but couldn't process the reply.",
         timestamp: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit'
-        })
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        intent: data.intent,
+        confidence: data.confidence,
       };
       setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      // Fallback for when the API is not running
+    } catch {
+      setIsOnline(false);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        sender: 'bot',
-        text: "I'm having trouble connecting to the server right now. Please try again later.",
+        sender: "bot",
+        text: "⚠️ I'm having trouble connecting to the server right now. Please ensure the backend is running and try again.",
         timestamp: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit'
-        })
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsTyping(false);
     }
   };
+
   return (
-    <div className="flex flex-col w-full max-w-md h-[600px] max-h-[90vh] bg-slate-50 rounded-2xl shadow-xl border border-gray-200 relative overflow-hidden">
-      <Header />
+    <div className="flex flex-col w-full h-dvh sm:h-[650px] lg:h-[800px] sm:max-h-[92vh] bg-white sm:rounded-3xl sm:shadow-2xl sm:border  overflow-hidden">
+      <Header
+        isOnline={isOnline}
+        accountInfo={accountInfo}
+        onOpenAccountPanel={onOpenAccountPanel}
+        onClearChat={handleClearChat}
+      />
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-50/95 bg-blend-overlay">
-        {messages.map((msg) =>
-        <MessageBubble
-          key={msg.id}
-          sender={msg.sender}
-          text={msg.text}
-          timestamp={msg.timestamp} />
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 scrollbar-hide bg-gradient-to-b from-slate-50 to-blue-50/30">
+        {messages.map((msg) => (
+          <MessageBubble
+            key={msg.id}
+            sender={msg.sender}
+            text={msg.text}
+            timestamp={msg.timestamp}
+            intent={msg.intent}
+            confidence={msg.confidence}
+          />
+        ))}
 
-        )}
-
-        {isTyping &&
-        <div className="mb-4">
+        {isTyping && (
+          <div className="mb-2">
             <TypingIndicator />
           </div>
-        }
+        )}
         <div ref={messagesEndRef} />
       </div>
 
       <ChatInput onSend={handleSendMessage} disabled={isTyping} />
-    </div>);
-
+    </div>
+  );
 }

@@ -81,6 +81,46 @@ def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
     return execute_query(query, (user_id,), fetch_one=True)
 
 
+def get_user_by_email_and_account(email: str, id_number: str, account_number: str) -> Optional[Dict[str, Any]]:
+    """
+    Validate that the given email + id_number + account_number all belong to the same user.
+    Returns account info dict or None.
+    """
+    query = """
+        SELECT u.id AS user_id, u.name AS account_holder,
+               a.account_number, a.account_type, a.status
+        FROM users u
+        JOIN accounts a ON a.user_id = u.id
+        WHERE LOWER(u.email) = LOWER(%s)
+          AND u.id_number = %s
+          AND a.account_number = %s
+          AND a.status = 'active'
+        LIMIT 1
+    """
+    return execute_query(query, (email.strip(), id_number.strip(), account_number.strip()), fetch_one=True)
+
+
+def save_verified_user(email: str, id_number: str) -> bool:
+    """
+    Insert or update a verified user's email + id_number in the verified_users table.
+    """
+    try:
+        query = """
+            INSERT INTO verified_users (email, id_number)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE id_number = VALUES(id_number), updated_at = NOW()
+        """
+        result = execute_query(query, (email.strip().lower(), id_number.strip()))
+        if result is not None:
+            logger.info(f"Saved verified user: {email}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Error saving verified user: {e}")
+        return False
+
+
+
 def get_account_balance(user_id: int = 1) -> Optional[float]:
     """
     Fetch account balance for a user
@@ -121,35 +161,26 @@ def get_recent_transactions(user_id: int = 1, limit: int = 5) -> List[Dict[str, 
     return result if result else []
 
 
-# ============= Knowledge Base Queries =============
+# ============= Chat Log Queries =============
 
-def get_answer_from_knowledge(question: str) -> Optional[str]:
+def save_chat_log(user_id: int, request_message: str, response: str, intent: str, confidence: float) -> bool:
     """
-    Search for answer in knowledge base
-    Uses case-insensitive matching
+    Save every chat request and its response to the chat_logs table.
+    Developers can review rows where reviewed = FALSE.
     """
-    query = """
-        SELECT answer 
-        FROM knowledge 
-        WHERE LOWER(question) = LOWER(%s)
-        LIMIT 1
-    """
-    result = execute_query(query, (question.strip(),), fetch_one=True)
-    return result['answer'] if result else None
-
-
-def search_knowledge_base(keywords: str) -> Optional[str]:
-    """
-    Search knowledge base using keyword matching
-    """
-    query = """
-        SELECT answer 
-        FROM knowledge 
-        WHERE LOWER(question) LIKE LOWER(%s)
-        LIMIT 1
-    """
-    result = execute_query(query, (f"%{keywords}%",), fetch_one=True)
-    return result['answer'] if result else None
+    try:
+        query = """
+            INSERT INTO chat_logs (user_id, request_message, response, intent, confidence)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        result = execute_query(query, (user_id, request_message.strip(), response.strip(), intent, round(confidence, 4)))
+        if result:
+            logger.info(f"Saved chat log for user {user_id}, intent={intent}")
+            return True
+        return False
+    except Exception as e:
+        logger.error(f"Error saving chat log: {e}")
+        return False
 
 
 # ============= Learning Feature Queries =============
@@ -199,6 +230,53 @@ def get_all_unknown_questions() -> List[Dict[str, Any]]:
         ORDER BY created_at DESC
     """
     result = execute_query(query, fetch_all=True)
+    return result if result else []
+
+
+# ============= Fixed Deposit Queries =============
+
+def get_user_fixed_deposits(user_id: int) -> List[Dict[str, Any]]:
+    """
+    Fetch all fixed deposits for a user.
+
+    Args:
+        user_id: User ID
+
+    Returns:
+        List of fixed deposit dictionaries
+    """
+    query = """
+        SELECT fd_number, principal, interest_rate, term_months,
+               maturity_amount, start_date, maturity_date, auto_renew, status
+        FROM fixed_deposits
+        WHERE user_id = %s
+        ORDER BY start_date DESC
+    """
+    result = execute_query(query, (user_id,), fetch_all=True)
+    return result if result else []
+
+
+# ============= Pawning Queries =============
+
+def get_user_pawning(user_id: int) -> List[Dict[str, Any]]:
+    """
+    Fetch all active/pending pawn tickets for a user.
+
+    Args:
+        user_id: User ID
+
+    Returns:
+        List of pawning dictionaries
+    """
+    query = """
+        SELECT ticket_number, item_description, item_category,
+               appraised_value, loan_amount, interest_rate,
+               pledged_at, due_date, outstanding, status
+        FROM pawning
+        WHERE user_id = %s
+        ORDER BY pledged_at DESC
+    """
+    result = execute_query(query, (user_id,), fetch_all=True)
     return result if result else []
 
 
