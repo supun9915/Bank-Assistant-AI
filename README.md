@@ -1,6 +1,166 @@
-# Smart Banking Assistant — High-Level Architecture
+# Smart Banking Assistant
 
-## 1. System Overview
+An AI-powered banking chatbot that uses a TensorFlow/Keras ANN to classify user intent and respond to banking queries in real time. The system provides account balance lookups, transaction history, loan/FD/pawning information, OTP-based account verification, and general banking support — all through a conversational chat interface.
+
+---
+
+## Features
+
+- **AI Intent Classification** — TensorFlow/Keras ANN trained on 22 banking intents with a Lancaster-stemmed Bag-of-Words feature pipeline
+- **Hybrid NLP** — ANN primary path (confidence threshold 0.40) with NLTK keyword fallback
+- **OTP Account Verification** — 3-factor identity check (email + National ID + account number) before exposing personal data
+- **English-Only Guard** — Non-English input politely declined using Unicode range detection + `langdetect`
+- **Context-Aware Follow-ups** — `last_intent` field carries conversation context across turns
+- **Self-Learning** — Unrecognised questions saved to `unknown_questions` table for future retraining
+- **Chat Log Persistence** — Every request/response logged to MySQL
+- **React Frontend** — Responsive SPA with animated chat bubbles and an account verification panel
+
+---
+
+## Tech Stack
+
+| Layer    | Technology                                      |
+| -------- | ----------------------------------------------- |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Axios |
+| Backend  | FastAPI, Uvicorn, Pydantic                      |
+| AI / NLP | TensorFlow/Keras, NLTK, scikit-learn, NumPy     |
+| Database | MySQL 8                                         |
+| Email    | Gmail SMTP (TLS)                                |
+
+---
+
+## Prerequisites
+
+| Requirement | Version |
+| ----------- | ------- |
+| Python      | 3.10+   |
+| Node.js     | 18+     |
+| MySQL       | 8.0+    |
+| pip         | latest  |
+| npm         | latest  |
+
+---
+
+## Quick Start
+
+### 1. Clone the repository
+
+```bash
+git clone <repo-url>
+cd Bank-Assistant-AI
+```
+
+### 2. Backend setup
+
+**Windows:**
+
+```bat
+cd backend
+setup.bat
+python migrate.py up
+copy .env.example .env   # then fill in your credentials
+.\venv\Scripts\activate
+python train_model.py
+uvicorn main:app --reload
+```
+
+**Linux / macOS:**
+
+```bash
+cd backend
+chmod +x setup.sh && ./setup.sh
+python migrate.py up
+cp .env.example .env     # then fill in your credentials
+source venv/bin/activate
+python train_model.py
+uvicorn main:app --reload
+```
+
+Backend runs at **http://localhost:8000** — Swagger UI at **http://localhost:8000/docs**
+
+### 3. Frontend setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend runs at **http://localhost:5173**
+
+### 4. Environment variables
+
+Create `backend/.env` from the example and set:
+
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_NAME=banking_chatbot
+DB_PORT=3306
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_APP_PASSWORD=your_app_password
+```
+
+---
+
+## Project Structure
+
+```
+Bank-Assistant-AI/
+├── backend/
+│   ├── main.py               # FastAPI app entry point & CORS config
+│   ├── db.py                 # Centralised MySQL query executor
+│   ├── nlp.py                # ANN inference + keyword fallback
+│   ├── train_model.py        # Offline ANN training script
+│   ├── migrate.py            # Versioned schema migration runner
+│   ├── intents/
+│   │   └── intents.json      # Intent patterns and responses (22 intents)
+│   ├── migrations/           # Versioned SQL migration scripts
+│   ├── models/
+│   │   ├── chat_models.py    # Pydantic request/response schemas
+│   │   └── chatbot_model.keras  # Trained ANN artefact (generated)
+│   ├── routes/
+│   │   ├── chat.py           # POST /api/chat
+│   │   └── account.py        # POST /api/account/send-otp & verify-otp
+│   └── services/
+│       ├── chat_service.py   # Intent handlers and response formatters
+│       └── email_service.py  # Gmail SMTP OTP delivery
+└── frontend/
+    ├── src/
+    │   ├── App.tsx            # Root component & session state
+    │   ├── api.ts             # Axios HTTP client
+    │   └── components/
+    │       ├── Header.tsx
+    │       ├── ChatContainer.tsx
+    │       ├── MessageBubble.tsx
+    │       ├── ChatInput.tsx
+    │       ├── TypingIndicator.tsx
+    │       └── AccountPanel.tsx
+    └── index.html
+```
+
+---
+
+## API Overview
+
+| Method | Endpoint                  | Description                          |
+| ------ | ------------------------- | ------------------------------------ |
+| POST   | `/api/chat`               | Send a chat message, receive a reply |
+| POST   | `/api/account/send-otp`   | Send OTP to registered email         |
+| POST   | `/api/account/verify-otp` | Verify OTP and authenticate account  |
+| GET    | `/`                       | Health check                         |
+| GET    | `/docs`                   | Swagger UI                           |
+
+See [backend/README.md](backend/README.md) for full request/response schemas and all 22 supported intents.
+
+---
+
+## High-Level Architecture
+
+### 1. System Overview
 
 The system is composed of four runtime layers and one offline pipeline:
 
@@ -26,7 +186,7 @@ The ANN model is trained separately using `train_model.py`. It reads patterns fr
 
 ---
 
-## 2. Frontend Architecture
+### 2. Frontend Architecture
 
 The frontend is structured as a tree of React components rooted at the application entry point:
 
@@ -41,7 +201,7 @@ The frontend is structured as a tree of React components rooted at the applicati
 - **`api.ts`** — The centralised Axios HTTP client. All network requests from the frontend go through this module.
 - **`localStorage`** — Used by `App.tsx` to persist verified account session data between browser sessions.
 
-### Frontend Libraries
+#### Frontend Libraries
 
 | Library        | Version | Purpose                     |
 | -------------- | ------- | --------------------------- |
@@ -59,7 +219,7 @@ The frontend is structured as a tree of React components rooted at the applicati
 
 ---
 
-## 3. Backend Architecture
+### 3. Backend Architecture
 
 The backend is a FastAPI application with a layered module structure:
 
@@ -82,7 +242,7 @@ The backend is a FastAPI application with a layered module structure:
 
 - **`migrate.py`** — A schema migration runner that applies versioned SQL scripts from the `migrations/` directory in order.
 
-### Backend Libraries
+#### Backend Libraries
 
 | Library                | Version   | Purpose                                     |
 | ---------------------- | --------- | ------------------------------------------- |

@@ -271,6 +271,175 @@ GET /health
 
 ---
 
+## 🤖 PEAS Model
+
+The Smart Banking Assistant is designed as a **goal-based intelligent agent**. The PEAS framework describes its structure:
+
+| Component | Element             | Description                                                    |
+| --------- | ------------------- | -------------------------------------------------------------- |
+| **P**     | Performance Measure | Intent accuracy, resolved queries, low UNKNOWN rate            |
+| **E**     | Environment         | User messages, MySQL database, email service, REST API         |
+| **A**     | Actuators           | Text replies, DB queries, OTP emails, chat log writes          |
+| **S**     | Sensors             | User message, user ID, account number, last intent, DB results |
+
+---
+
+### P — Performance Measure
+
+The agent's success is measured by:
+
+| Metric                | How it is captured                                                  |
+| --------------------- | ------------------------------------------------------------------- |
+| **Intent confidence** | ANN returns a float (0–1); threshold is `0.40`                      |
+| **Unknown rate**      | Every unrecognised query is saved to `unknown_questions` table      |
+| **Query resolution**  | Responses return `"intent"` + `"confidence"` for logging/monitoring |
+| **Auth success**      | OTP 3-factor verification pass/fail is logged                       |
+
+```python
+# nlp.py — ANN confidence threshold
+CONFIDENCE_THRESHOLD = 0.40
+if confidence < CONFIDENCE_THRESHOLD:
+    return "UNKNOWN", confidence   # low-confidence → saved to DB for retraining
+
+# services/chat_service.py — response always includes performance metadata
+return {
+    "reply": "...",
+    "intent": "BALANCE",
+    "confidence": 0.97,   # Performance metric
+}
+```
+
+---
+
+### E — Environment
+
+The agent operates in a **partially observable, sequential, static, discrete, single-agent** environment:
+
+| Property      | Value      | Reason                                                                         |
+| ------------- | ---------- | ------------------------------------------------------------------------------ |
+| Observable    | Partial    | Agent sees only the current message and last intent; not the user's full state |
+| Deterministic | Stochastic | Any free-text input is possible                                                |
+| Episodic      | Sequential | `last_intent` carries context from the previous turn                           |
+| Dynamic       | Static     | Banking data in MySQL changes only by external transactions                    |
+| Continuous    | Discrete   | Messages are discrete text inputs                                              |
+
+```
+User Browser / Postman
+        │  HTTP POST /api/chat
+        ▼
+   FastAPI (main.py)
+        │
+        ├── routes/chat.py           ← request parsing & routing
+        ├── services/chat_service.py ← agent brain
+        │       ├── Language Guard   ← environment filter
+        │       ├── NLP (nlp.py)     ← perception
+        │       └── Intent Handlers  ← action
+        ├── db.py                    ← environment state (MySQL)
+        └── services/email_service.py← environment effector (SMTP)
+```
+
+---
+
+### A — Actuators
+
+The agent influences the environment through these actuators:
+
+| Actuator           | Code Location                                                                                                     | What it Does                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| **Text reply**     | All `handle_*_intent()` in `chat_service.py`                                                                      | Returns natural-language response to the user            |
+| **Database read**  | `db.py` → `get_account_balance()`, `get_recent_transactions()`, `get_user_fixed_deposits()`, `get_user_pawning()` | Retrieves personal account data                          |
+| **Database write** | `db.py` → `save_chat_log()`, `save_unknown_question()`                                                            | Persists chat history and unknown queries for retraining |
+| **OTP email send** | `services/email_service.py`                                                                                       | Sends 6-digit OTP for 3-factor identity verification     |
+| **Intent router**  | `process_chat_message()` in `chat_service.py`                                                                     | Dispatches to the correct intent handler                 |
+
+```python
+# Actuator 1 — text reply (every intent handler)
+return {
+    "reply": "💰 Your current account balance is **$5,250.00**.",
+    "intent": "BALANCE",
+    "confidence": 0.97,
+    "data": {"balance": 5250.0}
+}
+
+# Actuator 2 — database write (chat_service.py)
+save_chat_log(user_id, message, response["reply"], response["intent"])
+save_unknown_question(user_message)   # feeds back into retraining loop
+
+# Actuator 3 — OTP email (email_service.py via account route)
+send_otp_email(user_email, otp_code)
+```
+
+---
+
+### S — Sensors
+
+The agent perceives its environment through these inputs:
+
+| Sensor                | Source                                                  | Used For                                           |
+| --------------------- | ------------------------------------------------------- | -------------------------------------------------- |
+| **`message`**         | HTTP request body                                       | Primary NLP input — tokenised, stemmed, vectorised |
+| **`user_id`**         | Resolved from verified `account_number`                 | Fetching personal DB records                       |
+| **`account_number`**  | HTTP request body (set after OTP verification)          | Auth guard for personal-data intents               |
+| **`last_intent`**     | HTTP request body (sent by frontend from previous turn) | Context-aware follow-up handling                   |
+| **Language detector** | Unicode range check + `langdetect` confidence > 0.90    | Reject non-English input before NLP                |
+| **DB query results**  | MySQL via `db.py`                                       | Balance, transactions, FD, pawn ticket data        |
+
+```python
+# services/chat_service.py — all sensors arrive as function parameters
+def process_chat_message(
+    message: str,            # Sensor: raw user text
+    user_id: int = 1,        # Sensor: resolved identity
+    last_intent: str = None, # Sensor: conversational context (previous turn)
+    account_number: str = None,  # Sensor: verified account (auth gate)
+) -> Dict[str, Any]:
+
+    # Sensor: language detection (Unicode + langdetect)
+    if _has_non_latin(message):
+        return UNSUPPORTED_LANGUAGE_RESPONSE
+
+    # Sensor: NLP intent perception (ANN bag-of-words)
+    intent, confidence = detect_intent(message)
+
+    # Sensor: database state read
+    balance = get_account_balance(user_id)
+```
+
+---
+
+### Full PEAS Agent Loop
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        ENVIRONMENT                              │
+│                                                                 │
+│  User ──► HTTP POST /api/chat ──► FastAPI ──► chat_service.py  │
+│                                                       │         │
+│  SENSORS ◄──────────────────────────────────────────  │         │
+│  • message (text)                                     │         │
+│  • user_id / account_number                          │         │
+│  • last_intent (context)                             │         │
+│  • DB state (MySQL balance, FD, pawn tickets)        │         │
+│                                                       ▼         │
+│                    AGENT BRAIN                                  │
+│  Step 1 — Language Guard   (filter non-English)                │
+│  Step 2 — Action Detector  (explicit action requests)          │
+│  Step 3 — NLP / ANN        (intent + confidence score)         │
+│  Step 4 — Auth Guard       (account_number required?)          │
+│  Step 5 — Intent Handler   (sub-topic routing)                 │
+│  Step 6 — DB Query         (live banking data if needed)       │
+│                                                       │         │
+│  ACTUATORS ───────────────────────────────────────── ▼         │
+│  • JSON reply       ──► User                                   │
+│  • save_chat_log()  ──► MySQL  (audit trail)                   │
+│  • save_unknown_question() ──► MySQL  (retraining data)        │
+│  • send_otp_email() ──► SMTP                                   │
+│                                                                 │
+│  PERFORMANCE: intent confidence · UNKNOWN rate · auth success  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## ðŸ—ƒï¸ Database Tables
 
 | Table               | Description                                |
