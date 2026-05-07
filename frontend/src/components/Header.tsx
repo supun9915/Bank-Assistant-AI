@@ -1,16 +1,26 @@
-import { Bot, Shield, Wifi, WifiOff, UserCheck, UserX } from "lucide-react";
+import {
+  Bot,
+  Shield,
+  Wifi,
+  WifiOff,
+  UserCheck,
+  UserX,
+  Trash2,
+} from "lucide-react";
 import { AccountInfo } from "./AccountPanel";
 
 interface HeaderProps {
   isOnline?: boolean;
   accountInfo?: AccountInfo | null;
   onOpenAccountPanel?: () => void;
+  onClearChat?: () => void;
 }
 
 export function Header({
   isOnline = true,
   accountInfo,
   onOpenAccountPanel,
+  onClearChat,
 }: HeaderProps) {
   return (
     <div className="relative flex items-center justify-between px-3 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-blue-700 to-blue-600 z-10">
@@ -81,6 +91,17 @@ export function Header({
               </span>
             </>
           )}
+        </button>
+
+        <button
+          onClick={onClearChat}
+          title="Clear chat"
+          className="flex items-center space-x-1.5 bg-white/15 hover:bg-red-500/40 border border-white/20 hover:border-red-400/40 rounded-full px-3 py-1.5 transition-colors"
+        >
+          <Trash2 size={13} className="text-white/70" />
+          <span className="text-[11px] text-white/70 font-medium hidden sm:inline">
+            Clear
+          </span>
         </button>
 
         <div className="flex items-center space-x-1.5 bg-white/15 rounded-full px-3 py-1.5">

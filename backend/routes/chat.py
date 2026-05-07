@@ -1,6 +1,3 @@
-"""
-Chat API Routes
-"""
 import logging
 from fastapi import APIRouter, HTTPException, status
 from models.chat_models import ChatRequest, ChatResponse
@@ -11,18 +8,14 @@ logger = logging.getLogger(__name__)
 # Create router for chat endpoints
 router = APIRouter()
 
-
 @router.post("/chat", response_model=ChatResponse, status_code=status.HTTP_200_OK)
 async def chat(request: ChatRequest) -> ChatResponse:
     """
-    Main chat endpoint - Processes user messages and returns bot responses
-    
+    Main chat endpoint - Processes user messages and returns bot responses   
     Args:
-        request: ChatRequest with user message and optional user_id
-        
+        request: ChatRequest with user message and optional user_id     
     Returns:
-        ChatResponse with bot reply and metadata
-        
+        ChatResponse with bot reply and metadata   
     Raises:
         HTTPException: If processing fails
     """

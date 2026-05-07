@@ -40,6 +40,21 @@ export function ChatContainer({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastIntentRef = useRef<string | undefined>(undefined);
 
+  const handleClearChat = () => {
+    setMessages([
+      {
+        id: Date.now().toString(),
+        sender: "bot",
+        text: "👋 Hello! I am your Smart Banking Assistant. How can I help you today?\n\nYou can ask me about your balance, transactions, loans, fixed deposits, and more.",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
+    lastIntentRef.current = undefined;
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -50,8 +65,13 @@ export function ChatContainer({
 
   const getFarewellReply = (text: string): string | null => {
     const normalized = text.toLowerCase().trim();
-    const isThanks = /\b(thank\s*you|thanks|thank\s*u|thx|ty)\b/.test(normalized);
-    const isBye = /\b(bye|goodbye|good\s*bye|see\s*you|see\s*ya|farewell|take\s*care|good\s*night|ciao|later)\b/.test(normalized);
+    const isThanks = /\b(thank\s*you|thanks|thank\s*u|thx|ty)\b/.test(
+      normalized,
+    );
+    const isBye =
+      /\b(bye|goodbye|good\s*bye|see\s*you|see\s*ya|farewell|take\s*care|good\s*night|ciao|later)\b/.test(
+        normalized,
+      );
 
     if (isThanks && isBye) {
       return "You're welcome! 😊 It was a pleasure assisting you. Goodbye! 👋 Have a wonderful day, and feel free to return anytime you need banking support.";
@@ -148,6 +168,7 @@ export function ChatContainer({
         isOnline={isOnline}
         accountInfo={accountInfo}
         onOpenAccountPanel={onOpenAccountPanel}
+        onClearChat={handleClearChat}
       />
 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 scrollbar-hide bg-gradient-to-b from-slate-50 to-blue-50/30">

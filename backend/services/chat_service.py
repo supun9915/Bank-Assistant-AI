@@ -1,17 +1,13 @@
-"""
-Chat service - Core business logic for chat processing
-"""
 import re
 import logging
 from typing import Dict, Any, Optional
-from langdetect import detect as _lang_detect, LangDetectException
+from langdetect import detect_langs as _lang_detect_langs, LangDetectException
 from nlp import detect_intent
 from db import (
     get_account_balance,
     get_recent_transactions,
     save_unknown_question,
     save_chat_log,
-    get_user_by_email_and_account,
     get_user_fixed_deposits,
     get_user_pawning,
 )
@@ -997,9 +993,12 @@ def process_chat_message(
             detected_lang = "non-latin"
         elif len(message.split()) >= 3:
             # Only run langdetect on phrases (3+ words) to avoid false positives
+            # Use detect_langs for confidence scores — only reject if confidently non-English (>0.90)
             try:
-                detected_lang = _lang_detect(message)
-                if detected_lang not in ("en",):
+                lang_probs = _lang_detect_langs(message)
+                top = lang_probs[0]
+                detected_lang = top.lang
+                if top.lang != "en" and top.prob > 0.90:
                     is_non_english = True
             except LangDetectException:
                 pass  # ambiguous input — treat as English

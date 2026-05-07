@@ -82,9 +82,9 @@ def tokenize_and_stem(sentence: str) -> list[str]:
 def preprocess(data: dict) -> tuple[list, list, list]:
     """
     Returns:
-        words     – sorted unique stemmed vocabulary
-        classes   – sorted unique intent tags
-        documents – list of (stemmed_tokens, tag)
+        words     - sorted unique stemmed vocabulary
+        classes   - sorted unique intent tags
+        documents - list of (stemmed_tokens, tag)
     """
     words: list[str] = []
     classes: list[str] = []
@@ -225,7 +225,7 @@ def build_model(input_size: int, output_size: int):
 
 def train():
     import tensorflow as tf
-    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+    from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint # type: ignore
 
     logger.info(f"TensorFlow version: {tf.__version__}")
 
